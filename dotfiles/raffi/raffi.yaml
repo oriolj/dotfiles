@@ -1,0 +1,49 @@
+# raffi: curated launcher for web apps + scripts (separate from full app menu)
+# Run with: raffi
+# Bound to SUPER + SHIFT + SPACE in hyprland.conf
+
+binaries:
+  gemini:
+    binary: chromium
+    args: ["--app=https://gemini.google.com"]
+    description: Gemini (web app)
+    icon: google-chrome
+
+  chatgpt:
+    binary: chromium
+    args: ["--app=https://chat.openai.com"]
+    description: ChatGPT (web app)
+    icon: google-chrome
+
+  calendar:
+    binary: chromium
+    args: ["--app=https://calendar.google.com"]
+    description: Google Calendar
+    icon: x-office-calendar
+
+  power-menu:
+    binary: /home/oriol/.config/hypr/scripts/power-menu.sh
+    description: Power menu (lock/logout/suspend/reboot/shutdown)
+    icon: system-shutdown
+
+  emoji:
+    binary: /home/oriol/.config/hypr/scripts/emoji-picker.sh
+    description: Emoji picker
+    icon: face-smile
+
+  windows:
+    binary: /home/oriol/.config/hypr/scripts/window-switcher.sh
+    description: Switch to open window
+    icon: preferences-system-windows
+
+  reload-hypr:
+    binary: hyprctl
+    args: ["reload"]
+    description: Reload Hyprland config
+    icon: view-refresh
+
+  edit-hypr:
+    binary: ghostty
+    args: ["-e", "nvim", "/home/oriol/.config/hypr/hyprland.conf"]
+    description: Edit hyprland.conf
+    icon: text-editor

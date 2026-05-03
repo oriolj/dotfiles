@@ -1,0 +1,45 @@
+# Backstop deny-list. The snapshot script controls what gets copied via its
+# MAPPINGS array, so most exclusion happens there. These patterns are a safety
+# net in case a tracked directory ever starts producing runtime/cache/auth
+# files that would otherwise leak through `rsync --delete`.
+
+# Editor / OS noise
+*.swp
+*~
+.DS_Store
+
+# Generic credential / token names
+**/*token*
+**/*secret*
+**/*credential*
+**/*.key
+**/*.pem
+**/*.pfx
+**/*.p12
+**/passwd
+**/password
+**/.env
+**/.env.*
+
+# Common per-app secret/state locations that should never be tracked
+**/cliphist.db
+**/cliphist*.db
+**/cookies.sqlite
+**/key4.db
+**/logins.json
+**/.netrc
+**/.aws/
+**/.gnupg/
+**/.ssh/id_*
+**/.ssh/known_hosts
+**/.config/sops*
+
+# Noctalia plugin runtime state (manifest/source files are tracked, but if
+# a plugin ever drops a per-instance auth/config blob next to them, ignore it).
+dotfiles/noctalia/plugins/*/state.json
+dotfiles/noctalia/plugins/*/auth.json
+dotfiles/noctalia/cache/
+dotfiles/noctalia/*.log
+
+# tplink-m7010 password file pattern (not currently tracked, but defensive).
+dotfiles/**/tplink-m7010/password

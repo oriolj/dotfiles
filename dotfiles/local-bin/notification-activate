@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Activate the most recent mako notification:
+#   1. Invoke its default action (some apps focus their window in response).
+#   2. Best-effort: find the matching compositor window by app_name + summary
+#      and focus it (since most app default actions actually do nothing).
+#   3. Dismiss the notification.
+# Works on niri and Hyprland.
+
+set -u
+
+n=$(makoctl list -j 2>/dev/null | jq -c '.[0] // empty')
+[ -z "$n" ] && exit 0
+
+app=$(jq -r '.app_name // ""'  <<<"$n")
+sum=$(jq -r '.summary  // ""'  <<<"$n")
+
+makoctl invoke >/dev/null 2>&1 || true
+
+# Match a window by app_id/class (case-insensitive contains either way) plus
+# summary substring on title. Score: app match = 1, title-contains-summary = 2.
+match() {
+    local payload="$1" app_field="$2" id_field="$3"
+    jq -r --arg app "${app,,}" --arg sum "${sum,,}" --arg af "$app_field" --arg idf "$id_field" '
+        map(
+            . as $w
+            | (($w[$af] // "") | ascii_downcase) as $a
+            | (($w.title  // "") | ascii_downcase) as $t
+            | {
+                id: $w[$idf],
+                score: (
+                    (if $app != "" and ($a == $app or ($a | contains($app)) or ($app | contains($a) and $a != "")) then 1 else 0 end)
+                    + (if $sum != "" and ($t | contains($sum)) then 2 else 0 end)
+                )
+              }
+        )
+        | sort_by(-.score)
+        | .[0]
+        | select(.score > 0)
+        | .id // empty
+    ' <<<"$payload"
+}
+
+if niri msg version >/dev/null 2>&1; then
+    id=$(match "$(niri msg -j windows)" "app_id" "id")
+    [ -n "$id" ] && niri msg action focus-window --id "$id" >/dev/null 2>&1
+elif command -v hyprctl >/dev/null && hyprctl version >/dev/null 2>&1; then
+    addr=$(match "$(hyprctl clients -j)" "class" "address")
+    [ -n "$addr" ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1
+fi
+
+makoctl dismiss >/dev/null 2>&1 || true

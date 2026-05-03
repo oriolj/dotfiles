@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Wrap `toggl-cli waybar` for noctalia's CustomButton.
+
+Adds a dynamic `icon` key (stopwatch when a timer is running, hourglass when
+idle) so the bar widget swaps glyphs based on state. Falls through other
+fields (text, tooltip, class) untouched.
+"""
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+
+
+def main() -> int:
+    try:
+        raw = subprocess.check_output(
+            ["/home/oriol/.local/bin/toggl-cli", "waybar"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(json.dumps({"text": "", "icon": "clock-off"}))
+        return 0
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        print(json.dumps({"text": "", "icon": "clock-off"}))
+        return 0
+
+    data["icon"] = "stopwatch" if data.get("class") == "running" else "clock-off"
+    print(json.dumps(data))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,7 @@
+[window.padding]
+x = 12
+y = 10
+
+[window]
+dynamic_padding = true
+opacity = 0.9

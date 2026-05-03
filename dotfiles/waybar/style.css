@@ -1,0 +1,171 @@
+* {
+    font-family: "JetBrains Mono", "Noto Sans", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: rgba(26, 27, 38, 0.9);
+    color: #cdd6f4;
+    border-bottom: 2px solid rgba(51, 204, 255, 0.5);
+}
+
+#workspaces button {
+    padding: 0 8px;
+    color: #6c7086;
+    border-bottom: 2px solid transparent;
+}
+
+#workspaces button.active {
+    color: #33ccff;
+    border-bottom: 2px solid #33ccff;
+}
+
+#workspaces button:hover {
+    background: rgba(51, 204, 255, 0.15);
+    color: #cdd6f4;
+}
+
+#window {
+    padding: 0 10px;
+    color: #a6adc8;
+}
+
+#clock {
+    padding: 0 12px;
+    color: #cdd6f4;
+    font-weight: bold;
+}
+
+#battery,
+#network,
+#bluetooth,
+#backlight,
+#pulseaudio,
+#custom-cpu,
+#custom-memory,
+#custom-claude-usage,
+#custom-mifi,
+#custom-syncthing,
+#custom-tailscale,
+#custom-toggl,
+#tray {
+    padding: 0 8px;
+    color: #cdd6f4;
+}
+
+#custom-toggl.running {
+    color: #a6e3a1;
+}
+
+#custom-toggl.error {
+    color: #f38ba8;
+}
+
+#custom-tailscale.connected {
+    color: #a6e3a1;
+}
+
+#custom-tailscale.exit-node {
+    color: #33ccff;
+}
+
+#custom-tailscale.stopped,
+#custom-tailscale.needs-login {
+    color: #6c7086;
+}
+
+#custom-tailscale.error {
+    color: #f38ba8;
+}
+
+#custom-syncthing.idle {
+    color: #a6e3a1;
+}
+
+#custom-syncthing.syncing {
+    color: #33ccff;
+}
+
+#custom-syncthing.stopped {
+    color: #6c7086;
+}
+
+#custom-syncthing.error {
+    color: #f38ba8;
+}
+
+#custom-mifi.warning {
+    color: #f9e2af;
+}
+
+#custom-mifi.critical {
+    color: #f38ba8;
+}
+
+#custom-mifi.disconnected {
+    color: #6c7086;
+}
+
+#custom-claude-usage.warning {
+    color: #f9e2af;
+}
+
+#custom-claude-usage.critical {
+    color: #f38ba8;
+}
+
+#battery.warning {
+    color: #f9e2af;
+}
+
+#battery.critical {
+    color: #f38ba8;
+}
+
+#battery.charging {
+    color: #a6e3a1;
+}
+
+#network.disconnected {
+    color: #f38ba8;
+}
+
+#pulseaudio.muted {
+    color: #6c7086;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#custom-tray-expand {
+    padding: 0 8px;
+    color: #6c7086;
+}
+
+#custom-tray-expand:hover {
+    color: #33ccff;
+}
+
+#custom-idle-inhibit {
+    padding: 0 10px;
+}
+
+#custom-idle-inhibit.idle-inhibited {
+    color: #f9e2af;
+}
+
+#custom-dnd {
+    padding: 0 10px;
+}
+
+#custom-dnd.dnd-on {
+    color: #f38ba8;
+}
+
+tooltip {
+    background-color: rgba(26, 27, 38, 0.95);
+    border: 1px solid #33ccff;
+    border-radius: 8px;
+}

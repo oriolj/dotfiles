@@ -1,0 +1,13 @@
+#!/bin/bash
+shopt -s nullglob
+files=(/sys/class/power_supply/BAT*/power_now)
+(( ${#files[@]} == 0 )) && exit 0
+power_uw=$(< "${files[0]}")
+(( power_uw == 0 )) && exit 0
+case $(< "${files[0]%/power_now}/status") in
+    Charging)    sign=+ ;;
+    Discharging) sign=- ;;
+    *)           sign=  ;;
+esac
+deci=$(( (power_uw + 50000) / 100000 ))
+printf '%s%d.%dW\n' "$sign" $((deci / 10)) $((deci % 10))

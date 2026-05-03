@@ -1,0 +1,232 @@
+{
+    "layer": "top",
+    "position": "top",
+    "mod": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "height": 40,
+    "modules-left": [
+        "hyprland/workspaces",
+        "hyprland/window"
+    ],
+    "modules-center": [
+        "clock",
+        "custom/toggl",
+        "custom/idle-inhibit",
+        "custom/dnd"
+    ],
+    "modules-right": [
+        "group/tray-expander",
+        "power-profiles-daemon",
+        "custom/cpu",
+        "custom/memory",
+        "custom/claude-usage",
+        "custom/mifi",
+        "custom/syncthing",
+        "custom/tailscale",
+        "mpris",
+        "network",
+        "bluetooth",
+        "backlight",
+        "pulseaudio",
+        "battery"
+    ],
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-scroll-up": "hyprctl dispatch workspace e-1",
+        "on-scroll-down": "hyprctl dispatch workspace e+1",
+        "all-outputs": true
+    },
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 50
+    },
+    "custom/cpu": {
+        "format": " {}",
+        "interval": 10,
+        "exec": "~/.config/waybar/scripts/cpu.sh",
+        "tooltip": false,
+        "on-click": "ghostty --class=com.mitchellh.ghostty.btop -e btop"
+    },
+    "custom/idle-inhibit": {
+        "exec": "~/.config/waybar/scripts/idle-inhibit.sh",
+        "return-type": "json",
+        "interval": 5,
+        "signal": 8,
+        "format": "{}",
+        "on-click": "~/.config/waybar/scripts/idle-toggle.sh"
+    },
+    "custom/dnd": {
+        "exec": "~/.config/waybar/scripts/dnd.sh",
+        "return-type": "json",
+        "interval": 5,
+        "signal": 9,
+        "format": "{}",
+        "on-click": "sh -c 'makoctl mode -t do-not-disturb; pkill -RTMIN+9 waybar'"
+    },
+    "group/tray-expander": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 300,
+            "children-class": "tray-group-item",
+            "transition-left-to-right": false
+        },
+        "modules": ["custom/tray-expand", "tray"]
+    },
+    "custom/tray-expand": {
+        "format": "",
+        "tooltip": false
+    },
+    "custom/memory": {
+        "format": " {}",
+        "interval": 10,
+        "exec": "~/.config/waybar/scripts/memory.sh",
+        "tooltip": false,
+        "on-click": "ghostty --class=com.mitchellh.ghostty.btop -e btop"
+    },
+    "custom/claude-usage": {
+        "exec": "claude-usage --waybar --browser chromium",
+        "return-type": "json",
+        "interval": 120,
+        "on-click": "claude-usage --waybar --browser chromium"
+    },
+    "custom/toggl": {
+        "exec": "/home/oriol/.local/bin/toggl-cli waybar",
+        "return-type": "json",
+        "interval": 200,
+        "format": "󱎫",
+        "tooltip": true,
+        "on-click": "ghostty --class=com.mitchellh.ghostty.toggl -e /home/oriol/.local/bin/toggl-cli tui"
+    },
+    "custom/mifi": {
+        "exec": "~/.config/waybar/scripts/mifi.sh",
+        "return-type": "json",
+        "interval": 30,
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "~/.config/waybar/scripts/mifi-tui.sh"
+    },
+    "custom/syncthing": {
+        "exec": "~/.config/waybar/scripts/syncthing.sh",
+        "return-type": "json",
+        "interval": 10,
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "sh -c 'if systemctl --user is-active --quiet syncthing.service; then systemctl --user stop syncthing.service; else systemctl --user start syncthing.service; fi'",
+        "on-click-right": "chromium --app=http://127.0.0.1:8384"
+    },
+    "custom/tailscale": {
+        "exec": "~/.config/waybar/scripts/tailscale.sh",
+        "return-type": "json",
+        "interval": 5,
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "sh -c 'if tailscale status >/dev/null 2>&1; then tailscale down; else tailscale up; fi'",
+        "on-click-right": "ghostty -e ~/.config/waybar/scripts/tailscale-status.sh"
+    },
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    },
+    "clock": {
+        "format": "{:%H:%M  %a, %b %d}",
+        "format-alt": "{:%Y-%m-%d  W%V  %H:%M:%S}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt>{calendar}</tt>",
+        "actions": {
+            "on-click-right": "mode"
+        }
+    },
+    "backlight": {
+        "format": "{icon} {percent}%",
+        "format-icons": ["󰃚", "󰃛", "󰃜", "󰃝", "󰃞", "󰃟", "󰃠"],
+        "tooltip-format": "Brightness: {percent}%",
+        "on-scroll-up": "brightnessctl -q set 1%-",
+        "on-scroll-down": "brightnessctl -q set 1%+"
+    },
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-plugged": "󰚥 {capacity}%",
+        "format-alt": "{icon} {time}",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "tooltip": false,
+        "format-muted": "󰝟 Muted",
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 0.5%-",
+        "on-scroll-down": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 0.5%+",
+        "format-icons": {
+            "headphone": "󰋋",
+            "headset": "󰋎",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        }
+    },
+    "pulseaudio#microphone": {
+        "format": "{format_source}",
+        "format-source": " {volume}%",
+        "format-source-muted": " Muted",
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+"
+    },
+    "network": {
+        "format-wifi": "{icon} {signalStrength}%",
+        "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+        "format-ethernet": "󰈀 {ipaddr}",
+        "tooltip-format": "{essid} - {ifname} via {gwaddr}",
+        "format-linked": "{ifname} (No IP)",
+        "format-disconnected": "󰤮 Disconnected",
+        "format-alt": "{ifname}: {essid} {ipaddr}/{cidr}",
+        "on-click": "ghostty --class=com.mitchellh.ghostty.impala -e impala",
+        "on-click-right": "ghostty --class=com.mitchellh.ghostty.impala -e impala"
+    },
+    "bluetooth": {
+        "format": "󰂯 {status}",
+        "format-disabled": "󰂲",
+        "format-off": "󰂲",
+        "format-connected": "󰂱 {num_connections}",
+        "format-connected-battery": "󰂱 {device_battery_percentage}%",
+        "tooltip-format": "{controller_alias}\t{controller_address}",
+        "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+        "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+        "on-click": "ghostty --class=com.mitchellh.ghostty.bluetui -e bluetui",
+        "on-click-right": "ghostty --class=com.mitchellh.ghostty.bluetui -e bluetui"
+    },
+    "mpris": {
+        "format": "{player_icon} {dynamic}",
+        "format-paused": "{status_icon} <i>{dynamic}</i>",
+        "player-icons": {
+            "default": "▶",
+            "spotify": "󰓇",
+            "firefox": "󰈹",
+            "chromium": "󰊯"
+        },
+        "status-icons": {
+            "paused": "󰏤"
+        },
+        "dynamic-len": 40,
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl next",
+        "on-click-middle": "playerctl previous"
+    },
+    "power-profiles-daemon": {
+        "format": "{icon}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "󰓅",
+            "balanced": "󰾅",
+            "power-saver": "󰌪"
+        }
+    }
+}
