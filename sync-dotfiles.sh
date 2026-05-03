@@ -24,6 +24,8 @@ declare -a MAPPINGS=(
     "$HOME/.config/chromium-flags.conf|chromium/chromium-flags.conf"
     "$HOME/.config/fish/config.fish|fish/config.fish"
     "$HOME/.config/fish/fish_plugins|fish/fish_plugins"
+    "$HOME/.config/fish/functions/tm.fish|fish/functions/tm.fish"
+    "$HOME/.claude/CLAUDE.md|claude/CLAUDE.md"
     "$HOME/.config/noctalia|noctalia"
     "$HOME/.local/bin/claude-usage-noctalia|local-bin/claude-usage-noctalia"
     "$HOME/.local/bin/battery-watts|local-bin/battery-watts"
