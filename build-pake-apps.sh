@@ -206,7 +206,31 @@ build_one() {
   printf '%s\n' "$pkgbuild" > "${dir}/PKGBUILD"
 
   echo "==> building $pkg in $dir"
-  ( cd "$dir" && makepkg -si ${FORCE:+-f} )
+  ( cd "$dir" && makepkg -s --needed ${FORCE:+-f} ) || return 1
+
+  # Stash the freshly-built pkg path for the batched install at the end.
+  local built
+  built=$(find "$dir" -maxdepth 1 \( -name '*.pkg.tar.zst' -o -name '*.pkg.tar' \) \
+                      -newer "${dir}/PKGBUILD" 2>/dev/null | head -n1)
+  if [[ -n "$built" ]]; then
+    BUILT_PKGS+=("$built")
+  else
+    echo "warn: no fresh package found in $dir after makepkg" >&2
+  fi
+}
+
+# Cache sudo creds once and keep them warm for the life of the script.
+# Without this, each per-app `makepkg -s` and the final `pacman -U` re-prompt
+# whenever sudo's timestamp expires (default 5 min) — annoying on a 30-60 min
+# multi-app rebuild. One up-front prompt covers everything.
+SUDO_KEEPALIVE_PID=
+keep_sudo_alive() {
+  [[ -n "$SUDO_KEEPALIVE_PID" ]] && return
+  echo "==> caching sudo credentials (one-time prompt)"
+  sudo -v || { echo "sudo cache failed; aborting" >&2; exit 1; }
+  ( while sleep 60; do sudo -n true 2>/dev/null || exit; done ) &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT INT TERM
 }
 
 # ---------------------------------------------------------------------------
@@ -227,11 +251,35 @@ done
 command -v makepkg >/dev/null \
   || { echo "makepkg not found — install base-devel"; exit 1; }
 
+# Decide up-front whether anything will actually need building. If everything
+# in scope is already installed and --force isn't set, we skip the sudo prompt.
+NEEDS_BUILD=0
+for entry in "${APPS[@]}"; do
+  IFS='|' read -r n _ _ _ <<<"$entry"
+  if [[ -n "$SELECTED" && "$SELECTED" != "$n" ]]; then continue; fi
+  if ! is_installed "${n}-app" || [[ "${FORCE:-0}" == "1" ]]; then
+    NEEDS_BUILD=1
+    break
+  fi
+done
+
+(( NEEDS_BUILD )) && keep_sudo_alive
+
+BUILT_PKGS=()
 for entry in "${APPS[@]}"; do
   IFS='|' read -r n u t i <<<"$entry"
   if [[ -n "$SELECTED" && "$SELECTED" != "$n" ]]; then continue; fi
-  build_one "$n" "$u" "$t" "$i"
+  build_one "$n" "$u" "$t" "$i" || echo "warn: build_one failed for $n" >&2
 done
+
+# Batch-install everything in one pacman invocation (one less sudo round-trip,
+# no half-installed state if a build fails partway through the loop).
+if (( ${#BUILT_PKGS[@]} )); then
+  echo
+  echo "==> installing ${#BUILT_PKGS[@]} package(s) in one shot"
+  printf '   %s\n' "${BUILT_PKGS[@]}"
+  sudo pacman -U --noconfirm "${BUILT_PKGS[@]}"
+fi
 
 echo
 echo "Installed pake apps:"
