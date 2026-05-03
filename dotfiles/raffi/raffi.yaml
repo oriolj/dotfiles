@@ -4,21 +4,18 @@
 
 binaries:
   gemini:
-    binary: chromium
-    args: ["--app=https://gemini.google.com"]
-    description: Gemini (web app)
+    binary: gemini-app
+    description: Gemini (pake-built native window)
     icon: google-chrome
 
   chatgpt:
-    binary: chromium
-    args: ["--app=https://chat.openai.com"]
-    description: ChatGPT (web app)
+    binary: chatgpt-app
+    description: ChatGPT (pake-built native window)
     icon: google-chrome
 
   calendar:
-    binary: chromium
-    args: ["--app=https://calendar.google.com"]
-    description: Google Calendar
+    binary: gcal-app
+    description: Google Calendar (pake-built native window)
     icon: x-office-calendar
 
   power-menu:

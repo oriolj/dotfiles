@@ -501,18 +501,19 @@ binds {
     // For example, this is a standard bind to toggle the screen reader (orca).
     Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
 
-    // App launchers (chromium app mode). Mirrors the Hyprland session's bindings,
-    // except Mod+Shift+Alt+A which is claude.ai here (Hyprland uses chatgpt there).
+    // App launchers (pake-built native windows; see ../../build-pake-apps.sh).
+    // Mirrors the Hyprland session's bindings, except Mod+Shift+Alt+A which
+    // is Claude here (Hyprland uses ChatGPT).
     Mod+Shift+B     hotkey-overlay-title="Browser (firefox)"     { spawn "firefox" "--new-window"; }
     Mod+Shift+E     hotkey-overlay-title="Emoji picker (noctalia)" { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "emoji"; }
-    Mod+Shift+A     hotkey-overlay-title="Gemini (app)"          { spawn "chromium" "--app=https://gemini.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+Alt+A hotkey-overlay-title="Claude (app)"          { spawn "chromium" "--app=https://claude.ai" "--ozone-platform=wayland"; }
-    Mod+Shift+C     hotkey-overlay-title="Google Calendar (app)" { spawn "chromium" "--app=https://calendar.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+G     hotkey-overlay-title="Gmail (app)"           { spawn "chromium" "--app=https://mail.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+H     hotkey-overlay-title="Home Assistant (app)"  { spawn "chromium" "--app=https://k47hlod95qzgumfbtnp8n8r610oh2mbo.ui.nabu.casa/" "--ozone-platform=wayland"; }
-    Mod+Shift+K     hotkey-overlay-title="Google Keep (app)"     { spawn "chromium" "--app=https://keep.google.com" "--ozone-platform=wayland"; }
+    Mod+Shift+A     hotkey-overlay-title="Gemini (app)"          { spawn "gemini-app"; }
+    Mod+Shift+Alt+A hotkey-overlay-title="Claude (app)"          { spawn "claude-app"; }
+    Mod+Shift+C     hotkey-overlay-title="Google Calendar (app)" { spawn "gcal-app"; }
+    Mod+Shift+G     hotkey-overlay-title="Gmail (app)"           { spawn "gmail-app"; }
+    Mod+Shift+H     hotkey-overlay-title="Home Assistant (app)"  { spawn "ha-app"; }
+    Mod+Shift+K     hotkey-overlay-title="Google Keep (app)"     { spawn "gkeep-app"; }
     Mod+Shift+O     hotkey-overlay-title="Obsidian"              { spawn "obsidian"; }
-    Mod+Shift+X     hotkey-overlay-title="X (app)"               { spawn "chromium" "--app=https://x.com" "--ozone-platform=wayland"; }
+    Mod+Shift+X     hotkey-overlay-title="X (app)"               { spawn "x-app"; }
 
     // Remote shell to minisforum-um880 (mosh). Teal-tinted background + teal
     // active border via the kitty-remote-dev class so it's obvious the

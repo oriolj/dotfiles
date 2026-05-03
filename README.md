@@ -75,6 +75,15 @@ See `.gitignore` for the deny-list patterns the snapshot script honors.
 
 - See `CLAUDE.md` for project context aimed at AI coding assistants
   working in this repo.
+- For wrapping a website as a desktop app, prefer
+  [pake](https://github.com/tw93/Pake) over `chromium --app=URL`. Pake
+  builds a real native window (Tauri/Rust) instead of a stripped-down
+  browser shell. The keyboard-bound web apps (gemini, gcal, gmail,
+  claude, chatgpt, gkeep, ha, x) are declared in `build-pake-apps.sh`,
+  which generates a per-app PKGBUILD, builds it via pake-cli, and
+  installs to `/usr/bin/<name>-app` via pacman. Run
+  `./build-pake-apps.sh --list` to see the set; `./build-pake-apps.sh`
+  to build the missing ones (~5–10 min per app, first run).
 - The noctalia bar shows disk **usage** (`/`) as a percent, with warning
   at 70% and critical at 85% (`systemMonitor.diskWarningThreshold` /
   `diskCriticalThreshold` in `noctalia/settings.json`). Lower than the
