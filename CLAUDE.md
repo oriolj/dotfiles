@@ -55,6 +55,14 @@ See `README.md` for the user-facing layout. In short:
 - `sync-dotfiles.sh` is the only piece of imperative code at the repo
   root.
 
+## Conventions
+
+- **niri is the primary WM.** When the niri and hyprland configs
+  diverge, niri follows niri's upstream defaults; hyprland is adapted
+  to mirror. See `README.md` → "Conventions".
+- **`KEYBOARD.md`** documents the binding grammar derived from niri
+  defaults — consult it before suggesting any keybind change.
+
 ## Things that look weird but aren't
 
 - `dotfiles/local-bin/*` are small Python/Bash helpers wired into bar

@@ -1,83 +1,77 @@
 # Keyboard binding grammar
 
-How keys are organised in this repo's WM configs (hypr, niri, and
-anything that follows). Treat the modifier as a **verb**, not a bucket.
+How keys are organised in this repo's WM configs. **niri is the primary
+WM** (see `README.md` → "Conventions"), and its [upstream defaults](https://github.com/YaLTeR/niri/blob/main/resources/default-config.kdl)
+define the canonical schema. hyprland is adapted to mirror it where
+reasonable.
 
-## The four layers
+## Core rule
 
-| Modifier      | Verb                  | Examples                                                                                              |
-| ---           | ---                   | ---                                                                                                   |
-| `Super`       | **focus / go to**     | `Super+h/j/k/l` focus neighbour, `Super+1-9` switch workspace, `Super+Tab` cycle, `Super+Enter` term |
-| `Super+Shift` | **carry / move**      | `Super+Shift+h/j/k/l` move window, `Super+Shift+1-9` send window to workspace, `Super+Shift+Q` close |
-| `Super+Ctrl`  | **adjust / resize**   | `Super+Ctrl+h/j/k/l` resize, `Super+Ctrl+arrows` nudge by pixels, `Super+Ctrl+F` fullscreen/floating |
-| `Super+Alt`   | **system / meta**     | `Super+Alt+L` lock, `Super+Alt+E` exit, `Super+Alt+R` reload, screenshots, power menu                |
+**Anything that controls the WM starts with `Super`** (`Mod` in niri =
+`Super` on TTY). Plain `Ctrl`, `Alt`, `Shift` belong to apps —
+terminals, tmux, neovim, browsers. The `Super` "tax" on every WM
+binding keeps the WM out of every app's namespace.
 
-`Super+Shift` is *the focused thing's version of whatever Super does*.
-That's why `Super+Shift+<letter>` is **not** used for app launching —
-it would collide with the carry/move grammar and the i3/sway/hypr/niri
-community convention.
+## Layers (from niri defaults)
 
-## Launching apps
+| Layer            | Verb                                  | Scale         | Example                                                                |
+| ---              | ---                                   | ---           | ---                                                                    |
+| `Mod`            | focus / act on focused window-column  | window/column | `Mod+H` focus left, `Mod+T` terminal, `Mod+V` floating, `Mod+Q` close  |
+| `Mod+Shift`      | same verb at larger scale             | monitor / ws  | `Mod+Shift+H` focus monitor left, `Mod+Shift+U` move workspace down    |
+| `Mod+Ctrl`       | move / send the focused thing         | window/column | `Mod+Ctrl+H` move column left, `Mod+Ctrl+1` send window to ws 1        |
+| `Mod+Ctrl+Shift` | move at larger scale                  | monitor       | `Mod+Ctrl+Shift+H` move column to monitor left                         |
+| `Mod+Alt`        | session / system / cross-WM parity    | global        | `Mod+Alt+L` lock, `Mod+Alt+Tab` window switcher, `Mod+Alt+N` activate-notification |
 
-Don't burn `Super+Shift+letter` on apps. Use this hierarchy instead:
+**The key pattern**: `Shift` means *"same verb, larger spatial unit"*.
+Focus a column → add `Shift` → focus a monitor. Move a window → add
+`Shift` → move at the column-to-monitor scale.
 
-1. **Launcher** for everything → `Super+Space` (fuzzel / rofi / walker / raffi).
-2. **2–3 dedicated keys** for the apps opened every minute:
-   - `Super+Enter` → terminal (universal)
-   - `Super+B` → browser
-3. **Leader / submap** for the next tier (hyprland `submap`, niri modes):
-   `Super+O` enters "open mode", then a single letter picks the app
-   (`F` Firefox, `T` Thunderbird, `S` Slack, …), `Esc` exits. Neovim
-   `<leader>`-style — unlimited shortcuts without consuming a modifier
-   space.
+## Apps
 
-## Decision rule
+niri leaves most letters in `Mod+Shift+` unbound; this repo uses them
+for app launchers: `Mod+Shift+B` browser, `Mod+Shift+E` emoji,
+`Mod+Shift+A` gemini, `Mod+Shift+C` calendar, `Mod+Shift+G` gmail,
+`Mod+Shift+M` mosh-remote, `Mod+Shift+O` obsidian, `Mod+Shift+X` x.com.
 
-For any new binding, ask in order:
+Letters claimed by niri defaults stay as defaults — apps avoid
+`Mod+Shift+H/J/K/L` (focus-monitor) and `Mod+Shift+R` (column-width-back).
 
-1. Does it move **focus**? → `Super`
-2. Does it move/transform the **focused window**? → `Super+Shift`
-3. Does it **resize / adjust** the focused window? → `Super+Ctrl`
-4. Is it **system-level** (not tied to a window)? → `Super+Alt`
-5. Is it **launching an app**? → launcher (`Super+Space`) or open-mode
-   submap (`Super+O` → letter)
+Launchers proper: `Mod+Space` noctalia (primary), `Mod+Shift+Space`
+raffi (curated), `Mod+D` available for niri's default fuzzel if
+desired. If `Mod+Shift+<letter>` slots ever get crowded, introduce a
+leader submap on a free key (e.g. `Mod+P` "Programs") for a 2-key
+chord.
 
-If the answer to all five is no, the binding probably doesn't belong at
-the WM level — let the app handle it.
+## Don't bind at the WM level
 
-## Don't bind these at the WM level
+- Plain `Alt+<letter>` — claimed by TUI apps, readline.
+- Plain `Ctrl+<letter>` — claimed by neovim, terminals, shells.
 
-- Plain `Alt+<letter>` — claimed by many TUI apps and readline.
-- Plain `Ctrl+<letter>` — claimed by neovim (`Ctrl+W`, `Ctrl+R`, …),
-  terminals, and shells.
+`Mod`-prefixed bindings are otherwise conflict-free with apps.
 
-`Super`-prefixed bindings are essentially conflict-free with apps;
-nothing else claims `Super`. Stay inside that namespace and the WM
-never steps on Neovim, emacs-style readline, or terminal mux bindings.
+## In-app keyboard layer
 
-## In-app keyboard layer (browsers)
+The WM grammar stops at the app boundary. Inside the browser, **Vimium**
+provides the equivalent vim-style layer on a single-letter namespace
+that doesn't collide with `Mod`-prefixed bindings. See
+[`dotfiles/firefox/README.md`](dotfiles/firefox/README.md).
 
-The WM grammar above stops at the application boundary. Inside the
-browser, the equivalent layer is **Vimium**: vim-style focus,
-follow-link, tab and history navigation, all on a single-letter
-namespace that doesn't collide with `Super`-prefixed WM bindings.
+## Hyprland adaptation
 
-See [`dotfiles/firefox/README.md`](dotfiles/firefox/README.md) for
-install links (Firefox + Chromium) and the Backup/Restore note for
-moving keybindings across browsers and machines.
+Hyprland's defaults differ (single-letter actions live on plain
+`Super`; almost no `Super+Ctrl` use). The hyprland config in
+`dotfiles/hypr/` mirrors niri's grammar where reasonable; some bindings
+stay native to hyprland (`Super+Shift+1-9` for send-to-workspace,
+since hyprland's example config doesn't use `Super+Ctrl` ergonomically).
 
-## Portability between niri and hyprland
+Cross-mapping recipe for the spatial primitive that differs (niri
+scrollable columns vs hyprland numbered workspaces) — bind the same
+physical keys to the equivalent verb on each side:
 
-~80% of bindings port cleanly: `Super+h/j/k/l`, `Super+1-9`, `Super+Q`,
-`Super+Enter`, the system layer.
+- `Mod+BracketLeft/Right` — niri scroll columns / hyprland prev-next
+  workspace
+- `Mod+Ctrl+BracketLeft/Right` — same, carrying the focused window
 
-The remaining ~20% must differ because the WMs differ:
-
-- Niri uses a scrollable column model; hyprland uses tree tiling.
-- Niri distinguishes columns from windows; hyprland only has windows.
-- Niri's workspaces are infinite and per-monitor scrollable; hyprland's
-  are numbered, per-monitor.
-
-The grammar makes which 20% is WM-specific obvious: anything in the
-*focus* or *carry* layers that touches the spatial model. Keep the
-verbs the same across WMs; let the targets differ.
+Concepts that don't translate (hyprland submaps, niri column splits,
+scratchpads / special workspaces, per-monitor rules, touch gestures)
+stay WM-specific.

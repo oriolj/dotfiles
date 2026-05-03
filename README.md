@@ -7,14 +7,25 @@ snapshot.
 
 ## Stack
 
-- **Compositors**: Hyprland and niri (both daily-driven; configs in
-  `dotfiles/hypr/` and `dotfiles/niri/`).
-- **Bar / shell**: waybar on Hyprland, noctalia-shell on niri.
-- **Terminals**: ghostty (Hyprland), alacritty (niri), kitty for floating
+- **Compositors**: **niri (primary)**, Hyprland (kept for parity).
+  Configs in `dotfiles/niri/` and `dotfiles/hypr/`.
+- **Bar / shell**: noctalia-shell on niri, waybar on Hyprland.
+- **Terminals**: alacritty (niri), ghostty (Hyprland), kitty for floating
   popups and remote sessions.
-- **Launcher**: fuzzel + raffi on Hyprland, noctalia launcher on niri.
+- **Launcher**: noctalia launcher on niri, fuzzel + raffi on Hyprland.
 - **Notification daemon**: mako (both compositors).
 - **Shell**: fish; multiplexer: tmux.
+
+## Conventions
+
+- **niri is the primary WM**, and its upstream defaults are canonical.
+  Hyprland is adapted to feel similar where reasonable; when the two
+  diverge, niri wins and hyprland mirrors it.
+- **Stick to defaults.** Customise only when there's a real reason —
+  upstream defaults are the most-tested, best-documented, easiest to
+  port across machines. Keep the diff against the default config small
+  and explained.
+- See [`KEYBOARD.md`](KEYBOARD.md) for the keybinding grammar.
 
 ## Layout
 
