@@ -14,3 +14,10 @@ function m
     mosh minisforum-um880
     printf '\e]111\e\\'
 end
+
+# pnpm
+set -gx PNPM_HOME "/home/oriol/.local/share/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
