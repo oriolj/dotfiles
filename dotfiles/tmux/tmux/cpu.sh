@@ -22,7 +22,8 @@ else
     prev_ts=$now
 fi
 
-printf "%d%%\n" "${last_pct:-0}"
+load=$(awk '{print $3}' /proc/loadavg)
+printf "%d%% (%s)\n" "${last_pct:-0}" "$load"
 
 cat > "$state" <<EOF
 prev_total=$prev_total
