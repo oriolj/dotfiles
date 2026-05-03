@@ -55,6 +55,17 @@ the WM level — let the app handle it.
 nothing else claims `Super`. Stay inside that namespace and the WM
 never steps on Neovim, emacs-style readline, or terminal mux bindings.
 
+## In-app keyboard layer (browsers)
+
+The WM grammar above stops at the application boundary. Inside the
+browser, the equivalent layer is **Vimium**: vim-style focus,
+follow-link, tab and history navigation, all on a single-letter
+namespace that doesn't collide with `Super`-prefixed WM bindings.
+
+See [`dotfiles/firefox/README.md`](dotfiles/firefox/README.md) for
+install links (Firefox + Chromium) and the Backup/Restore note for
+moving keybindings across browsers and machines.
+
 ## Portability between niri and hyprland
 
 ~80% of bindings port cleanly: `Super+h/j/k/l`, `Super+1-9`, `Super+Q`,
