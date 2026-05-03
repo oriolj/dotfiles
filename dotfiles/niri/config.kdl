@@ -454,6 +454,14 @@ window-rule {
     }
 }
 
+// Pake web apps (gemini-app, chatgpt-app, …): no decorations for an
+// immersive web-app feel. app-id is set to `pake-<name>-app` by Tauri.
+window-rule {
+    match app-id=r#"^pake-.*-app$"#
+    border { off; }
+    geometry-corner-radius 0
+}
+
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
 /-window-rule {
@@ -502,9 +510,10 @@ binds {
     // For example, this is a standard bind to toggle the screen reader (orca).
     Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
 
-    // App launchers (pake-built native windows; see ../../build-pake-apps.sh).
-    // Mirrors the Hyprland session's bindings, except Mod+Shift+Alt+A which
-    // is Claude here (Hyprland uses ChatGPT).
+    // App launchers (pake/Tauri binaries built by ./build-pake-apps.sh in
+    // dotfiles repo; decoration-less via the window-rule on `^pake-.*-app$`
+    // further down). Mirrors Hyprland's bindings, except Mod+Shift+Alt+A is
+    // claude here (Hyprland uses chatgpt there).
     Mod+Shift+B     hotkey-overlay-title="Browser (firefox)"     { spawn "firefox" "--new-window"; }
     Mod+Shift+E     hotkey-overlay-title="Emoji picker (noctalia)" { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "emoji"; }
     Mod+Shift+A     hotkey-overlay-title="Gemini (app)"          { spawn "gemini-app"; }

@@ -25,24 +25,28 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Apps. Add new entries here. Format: name|url|title
+# Apps. Add new entries here. Format: name|url|title|icon_url
 # Binary lands at /usr/bin/<name>-app; pkgname is <name>-app.
+# icon_url is optional — if set, pake downloads it and uses it as the app
+# icon (handles svg/png/ico). If omitted, pake falls back to its own
+# heuristics (logo.dev, brandfetch, clearbit, favicon, …) which often
+# yields the wrong logo (e.g. plain Google "G" for any *.google.com app).
 # ---------------------------------------------------------------------------
 APPS=(
-  "gemini|https://gemini.google.com|Gemini"
-  "chatgpt|https://chatgpt.com|ChatGPT"
-  "claude|https://claude.ai|Claude"
-  "gcal|https://calendar.google.com|Google Calendar"
-  "gmail|https://mail.google.com|Gmail"
-  "gkeep|https://keep.google.com|Google Keep"
-  "ha|https://k47hlod95qzgumfbtnp8n8r610oh2mbo.ui.nabu.casa/|Home Assistant"
-  "x|https://x.com|X"
+  "gemini|https://gemini.google.com|Gemini|https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg"
+  "chatgpt|https://chatgpt.com|ChatGPT|https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+  "claude|https://claude.ai|Claude|https://claude.ai/images/claude-app-icon.png"
+  "gcal|https://calendar.google.com|Google Calendar|https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg"
+  "gmail|https://mail.google.com|Gmail|https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg"
+  "gkeep|https://keep.google.com|Google Keep|https://cdn.simpleicons.org/googlekeep"
+  "ha|https://k47hlod95qzgumfbtnp8n8r610oh2mbo.ui.nabu.casa/|Home Assistant|https://brands.home-assistant.io/homeassistant/icon.png"
+  "x|https://x.com|X|https://x.com/apple-touch-icon.png"
 )
 
 BUILD_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/pake-build"
 
 # ---------------------------------------------------------------------------
-# PKGBUILD template. Placeholders: {NAME}, {URL}, {TITLE}.
+# PKGBUILD template. Placeholders: {NAME}, {URL}, {TITLE}, {ICON}.
 # package() extracts the .deb pake produces (Tauri's deb bundler) into
 # $pkgdir; pacman then owns /usr/bin/<name>-app and the .desktop file.
 # ---------------------------------------------------------------------------
@@ -62,14 +66,59 @@ options=(!strip !debug)
 _app_url="{URL}"
 _app_name="{NAME}-app"
 _app_title="{TITLE}"
+_app_icon="{ICON}"
 
 build() {
   cd "$srcdir"
   if [[ ! -x ./node_modules/.bin/pake ]]; then
     npm install --prefix "$srcdir" pake-cli
   fi
+
+  # Pake's --hide-title-bar flag is Mac-only and on Linux Tauri's title bar
+  # comes from two layers, both of which need to be silenced:
+  #
+  # (1) Tauri's WebviewWindowBuilder defaults to decorations=true → patch
+  #     pake's window.rs to call .decorations(false) on the builder.
+  local window_rs="$srcdir/node_modules/pake-cli/src-tauri/src/app/window.rs"
+  if [[ -f "$window_rs" ]] && ! grep -q '\.decorations(false)' "$window_rs"; then
+    sed -i 's|window_builder\.build()|window_builder.decorations(false).build()|' "$window_rs"
+  fi
+
+  # (2) tao (Tauri's windowing backend) unconditionally attaches a custom
+  #     GTK HeaderBar on Wayland (close/min/max buttons) regardless of the
+  #     builder's `decorations` flag. Pre-fetch deps and patch tao's
+  #     window.rs to honor `attributes.decorations` before adding the header.
+  #     Cargo treats registry source as immutable (fingerprint based on
+  #     .crate hash, not file mtimes), so when we patch we also invalidate
+  #     tao's compiled artifacts in this project's target dir to force a
+  #     rebuild — otherwise cargo silently uses the stale .o.
+  ( cd "$srcdir/node_modules/pake-cli/src-tauri" && cargo fetch >/dev/null 2>&1 ) || true
+  local tao_patched=0
+  for tao_win in "$HOME"/.cargo/registry/src/*/tao-0.34.*/src/platform_impl/linux/window.rs; do
+    [[ -f "$tao_win" ]] || continue
+    if ! grep -q "is_wayland && attributes.decorations" "$tao_win"; then
+      sed -i 's|^    if is_wayland {$|    if is_wayland \&\& attributes.decorations {|' "$tao_win"
+      tao_patched=1
+    fi
+  done
+  if (( tao_patched )); then
+    local target_dir="$srcdir/node_modules/pake-cli/src-tauri/target/release"
+    if [[ -d "$target_dir" ]]; then
+      rm -rf "$target_dir"/.fingerprint/tao-* 2>/dev/null || true
+      find "$target_dir/deps" -maxdepth 1 \( -name 'tao-*' -o -name 'libtao-*' \) -delete 2>/dev/null || true
+    fi
+  fi
+
+  # Rust 1.95 made rust-lld the default linker on x86_64-linux, but it fails
+  # to resolve ring 0.17.14's P256 asm symbols ("undefined symbol:
+  # ring_core_0_17_14__p256_point_mul" etc.). Force mold for the link step.
+  # --targets deb: skip the appimage bundle (its strip step is broken on
+  # modern glibc / Arch). package() repackages the .deb into a pacman pkg.
+  local -a icon_arg=()
+  [[ -n "$_app_icon" ]] && icon_arg=(--icon "$_app_icon")
   PATH="$srcdir/node_modules/.bin:$PATH" \
-    pake "$_app_url" --name "$_app_name" --title "$_app_title"
+  RUSTFLAGS="${RUSTFLAGS:-} -C link-arg=-fuse-ld=mold" \
+    pake "$_app_url" --name "$_app_name" --title "$_app_title" --targets deb "${icon_arg[@]}"
 }
 
 package() {
@@ -85,22 +134,32 @@ package() {
     bsdtar -xf "$deb"
     bsdtar -xf data.tar.* -C "$pkgdir"
   }
+
+  # pake hardcodes a "pake-" prefix on the binary; symlink so keybinds can
+  # call the app by its short name.
+  if [[ -x "$pkgdir/usr/bin/pake-${_app_name}" && ! -e "$pkgdir/usr/bin/${_app_name}" ]]; then
+    ln -s "pake-${_app_name}" "$pkgdir/usr/bin/${_app_name}"
+  fi
+
+  # pake ships two .desktop entries per app; the "com.pake.*" one references
+  # an icon outside the search path and shows up as a duplicate launcher entry.
+  rm -f "$pkgdir/usr/share/applications/com.pake.${_app_name}.desktop"
 }
 PKGBUILD_EOF
 
 # ---------------------------------------------------------------------------
 list_apps() {
-  printf '%-10s %-44s %s\n' "NAME" "URL" "TITLE"
+  printf '%-10s %-44s %-18s %s\n' "NAME" "URL" "TITLE" "ICON"
   for entry in "${APPS[@]}"; do
-    IFS='|' read -r n u t <<<"$entry"
-    printf '%-10s %-44s %s\n' "$n" "$u" "$t"
+    IFS='|' read -r n u t i <<<"$entry"
+    printf '%-10s %-44s %-18s %s\n' "$n" "$u" "$t" "${i:-(auto)}"
   done
 }
 
 is_installed() { pacman -Q "$1" &>/dev/null; }
 
 build_one() {
-  local name="$1" url="$2" title="$3"
+  local name="$1" url="$2" title="$3" icon="${4:-}"
   local pkg="${name}-app"
   local dir="${BUILD_ROOT}/${pkg}"
 
@@ -113,6 +172,7 @@ build_one() {
   local pkgbuild="${PKGBUILD_TEMPLATE//\{NAME\}/$name}"
   pkgbuild="${pkgbuild//\{URL\}/$url}"
   pkgbuild="${pkgbuild//\{TITLE\}/$title}"
+  pkgbuild="${pkgbuild//\{ICON\}/$icon}"
   printf '%s\n' "$pkgbuild" > "${dir}/PKGBUILD"
 
   echo "==> building $pkg in $dir"
@@ -138,14 +198,14 @@ command -v makepkg >/dev/null \
   || { echo "makepkg not found — install base-devel"; exit 1; }
 
 for entry in "${APPS[@]}"; do
-  IFS='|' read -r n u t <<<"$entry"
+  IFS='|' read -r n u t i <<<"$entry"
   if [[ -n "$SELECTED" && "$SELECTED" != "$n" ]]; then continue; fi
-  build_one "$n" "$u" "$t"
+  build_one "$n" "$u" "$t" "$i"
 done
 
 echo
 echo "Installed pake apps:"
 for entry in "${APPS[@]}"; do
-  IFS='|' read -r n _ _ <<<"$entry"
+  IFS='|' read -r n _ _ _ <<<"$entry"
   pacman -Q "${n}-app" 2>/dev/null || true
 done
