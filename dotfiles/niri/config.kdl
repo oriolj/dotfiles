@@ -512,6 +512,7 @@ binds {
     Mod+Shift+H     hotkey-overlay-title="Home Assistant (app)"  { spawn "chromium" "--app=https://k47hlod95qzgumfbtnp8n8r610oh2mbo.ui.nabu.casa/" "--ozone-platform=wayland"; }
     Mod+Shift+K     hotkey-overlay-title="Google Keep (app)"     { spawn "chromium" "--app=https://keep.google.com" "--ozone-platform=wayland"; }
     Mod+Shift+O     hotkey-overlay-title="Obsidian"              { spawn "obsidian"; }
+    Mod+Shift+X     hotkey-overlay-title="X (app)"               { spawn "chromium" "--app=https://x.com" "--ozone-platform=wayland"; }
 
     // Remote shell to minisforum-um880 (mosh). Teal-tinted background + teal
     // active border via the kitty-remote-dev class so it's obvious the
