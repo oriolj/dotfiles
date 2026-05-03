@@ -43,3 +43,4 @@ dotfiles/noctalia/*.log
 
 # tplink-m7010 password file pattern (not currently tracked, but defensive).
 dotfiles/**/tplink-m7010/password
+nohup.out

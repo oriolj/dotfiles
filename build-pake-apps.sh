@@ -60,7 +60,7 @@ arch=("x86_64")
 url="https://github.com/tw93/Pake"
 license=("MIT")
 depends=("webkit2gtk-4.1" "gtk3" "libayatana-appindicator")
-makedepends=("nodejs" "npm" "rust" "binutils")
+makedepends=("nodejs" "npm" "rust" "binutils" "imagemagick")
 options=(!strip !debug)
 
 _app_url="{URL}"
@@ -144,6 +144,36 @@ package() {
   # pake ships two .desktop entries per app; the "com.pake.*" one references
   # an icon outside the search path and shows up as a duplicate launcher entry.
   rm -f "$pkgdir/usr/share/applications/com.pake.${_app_name}.desktop"
+
+  # Rewrite the surviving .desktop file: pake's defaults are noisy
+  # ("Name=<binary>", "Comment=Turn any webpage into a desktop app with Rust",
+  # empty Categories). Replace with the human-readable title + sane category
+  # so launchers and bar widgets show useful labels.
+  local desktop="$pkgdir/usr/share/applications/${_app_name}.desktop"
+  if [[ -f "$desktop" ]]; then
+    sed -i \
+      -e "s|^Name=.*|Name=${_app_title}|" \
+      -e "s|^Comment=.*|Comment=${_app_title}|" \
+      -e "s|^Categories=.*|Categories=Network;WebBrowser;Utility;|" \
+      "$desktop"
+  fi
+
+  # pake only ships the icon at 512x512. Many Qt/QML launchers (noctalia,
+  # plasma) refuse to downscale that far and show a missing-image placeholder
+  # (black-and-pink checkerboard). Generate the standard icon-theme sizes
+  # from the 512 source via ImageMagick, and drop a copy into pixmaps as a
+  # legacy fallback for tools that bypass the icon-theme cache entirely.
+  local icon512="$pkgdir/usr/share/icons/hicolor/512x512/apps/pake-${_app_name}.png"
+  if [[ -f "$icon512" ]]; then
+    local size
+    for size in 48 64 128 256; do
+      local sized_dir="$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps"
+      mkdir -p "$sized_dir"
+      magick "$icon512" -resize "${size}x${size}" "$sized_dir/pake-${_app_name}.png"
+    done
+    mkdir -p "$pkgdir/usr/share/pixmaps"
+    cp "$icon512" "$pkgdir/usr/share/pixmaps/pake-${_app_name}.png"
+  fi
 }
 PKGBUILD_EOF
 
