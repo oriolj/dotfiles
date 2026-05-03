@@ -121,6 +121,15 @@ summarize_rsync() {
     '
 }
 
+# rsync's --dry-run with a missing destination parent errors with code 3
+# instead of treating files as "new" — and rsync 3.4.1's --mkpath doesn't
+# rescue dry-run. So pre-create the destination's containing dir ourselves.
+ensure_dest_parent() {
+    local to="$1" parent
+    if [[ "$to" == */ ]]; then parent="${to%/}"; else parent="$(dirname "$to")"; fi
+    [[ -d "$parent" ]] || mkdir -p "$parent"
+}
+
 # Sets globals STATUS ("missing"|"unchanged"|"changes") and CHANGES
 # (friendly summary lines, empty unless STATUS=changes).
 probe_mapping() {
@@ -131,6 +140,8 @@ probe_mapping() {
     local args=(-a) src="$from" dst="$to"
     if [[ -d "$from" ]]; then args+=(--delete); src="$from/"; dst="$to/"; fi
 
+    ensure_dest_parent "$dst"
+
     CHANGES=$(rsync "${args[@]}" --dry-run --itemize-changes "$src" "$dst" 2>/dev/null | summarize_rsync)
     if [[ -z "$CHANGES" ]]; then STATUS="unchanged"; return; fi
     STATUS="changes"
@@ -140,6 +151,7 @@ apply_mapping() {
     local from="$1" to="$2"
     local args=(-a --mkpath) src="$from" dst="$to"
     if [[ -d "$from" ]]; then args+=(--delete); src="$from/"; dst="$to/"; fi
+    ensure_dest_parent "$dst"
     rsync "${args[@]}" "$src" "$dst"
 }
 
