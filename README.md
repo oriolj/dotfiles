@@ -75,3 +75,9 @@ See `.gitignore` for the deny-list patterns the snapshot script honors.
 
 - See `CLAUDE.md` for project context aimed at AI coding assistants
   working in this repo.
+- The noctalia bar shows disk **usage** (`/`) as a percent, with warning
+  at 70% and critical at 85% (`systemMonitor.diskWarningThreshold` /
+  `diskCriticalThreshold` in `noctalia/settings.json`). Lower than the
+  noctalia defaults (80/90) because `/` is btrfs and wants headroom to
+  stay performant — once free space drops too low, allocation and
+  balance get expensive.
