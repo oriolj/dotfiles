@@ -84,6 +84,12 @@ See `.gitignore` for the deny-list patterns the snapshot script honors.
   installs to `/usr/bin/<name>-app` via pacman. Run
   `./build-pake-apps.sh --list` to see the set; `./build-pake-apps.sh`
   to build the missing ones (~5–10 min per app, first run).
+- The noctalia control center (notifications, power profile, keep
+  awake, night light, audio, brightness, weather, …) is opened by
+  **right-clicking anywhere on the bar** (`bar.rightClickAction =
+  controlCenter` in `noctalia/settings.json`). The Noctalia logo
+  widget is intentionally not in the bar — the right-click is
+  enough.
 - The noctalia bar shows disk **usage** (`/`) as a percent, with warning
   at 70% and critical at 85% (`systemMonitor.diskWarningThreshold` /
   `diskCriticalThreshold` in `noctalia/settings.json`). Lower than the
