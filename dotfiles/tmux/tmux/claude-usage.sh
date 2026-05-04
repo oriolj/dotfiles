@@ -10,7 +10,7 @@ fi
 out=$(claude-usage --waybar --format '5h {5h_pct}% | 7d {7d_pct}%' 2>/dev/null \
   | jq -r '.text // empty' 2>/dev/null \
   | sed -E 's#</?span[^>]*>##g')
-[ -z "$out" ] && out="Claude n/a"
+[ -z "$out" ] && out="n/a"
 
 printf '%s\n' "$out" > "$cache"
 cat "$cache"
