@@ -758,7 +758,7 @@ binds {
 
     // Notification controls (mako owns the D-Bus notification bus on niri).
     Mod+N       hotkey-overlay-title="Dismiss last notification (mako)" { spawn "makoctl" "dismiss"; }
-    Mod+Shift+N hotkey-overlay-title="Dismiss all notifications (mako)" { spawn "makoctl" "dismiss" "--all"; }
+    Mod+Shift+N hotkey-overlay-title="Google Keep (app)"               { spawn "chromium" "--app=https://keep.google.com" "--ozone-platform=wayland"; }
     Mod+Ctrl+N  hotkey-overlay-title="Toggle Do Not Disturb (mako)" { spawn "sh" "-c" "makoctl mode -t do-not-disturb"; }
     // Activate the last notification: invoke its default action, focus the
     // source window (matched by app_id + title vs notification summary), dismiss.

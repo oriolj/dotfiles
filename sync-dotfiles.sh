@@ -59,6 +59,10 @@ Without --only / --all an interactive group picker is shown first
 detected changes is confirmed individually (y/n/a/q). Directory copies
 use rsync --delete: the destination becomes an exact mirror of the
 source, including deletions.
+
+After an interactive restore, a few host-specific questions are asked
+(suspend-on-idle, 4K display) and applied to the relevant configs.
+Skipped under --yes / --dry-run.
 EOF
 }
 
@@ -155,6 +159,95 @@ apply_mapping() {
     rsync "${args[@]}" "$src" "$dst"
 }
 
+# Comment out the listener block that runs `systemctl suspend` in
+# hypridle.conf; idempotent.
+disable_hypridle_suspend() {
+    local f="$HOME/.config/hypr/hypridle.conf"
+    [[ -f "$f" ]] || return 0
+    python3 - "$f" <<'PY'
+import re, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+src = p.read_text()
+def comment(m):
+    return ''.join(
+        ('# ' + ln if ln.strip() and not ln.lstrip().startswith('#') else ln) + '\n'
+        for ln in m.group(0).rstrip('\n').splitlines()
+    )
+new = re.sub(
+    r'^[ \t]*listener[ \t]*\{[^}]*systemctl[ \t]+suspend[^}]*\}[ \t]*\n?',
+    comment, src, count=1, flags=re.MULTILINE,
+)
+if new != src:
+    p.write_text(new)
+PY
+}
+
+# Set noctalia idle.suspendTimeout to 0 (disables only the suspend
+# action; lock + screen-off remain). Idempotent.
+disable_noctalia_suspend() {
+    local f="$HOME/.config/noctalia/settings.json"
+    [[ -f "$f" ]] || return 0
+    python3 - "$f" <<'PY'
+import json, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+data = json.loads(p.read_text())
+idle = data.get('idle')
+if isinstance(idle, dict) and idle.get('suspendTimeout') != 0:
+    idle['suspendTimeout'] = 0
+    p.write_text(json.dumps(data, indent=2) + '\n')
+PY
+}
+
+# Replace niri preset-column-widths with a 7-step set tuned for 4K
+# (1/6, 1/4, 1/3, 1/2, 2/3, 3/4, 5/6). Idempotent.
+apply_niri_4k_presets() {
+    local f="$HOME/.config/niri/config.kdl"
+    [[ -f "$f" ]] || return 0
+    python3 - "$f" <<'PY'
+import re, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+src = p.read_text()
+new_block = (
+    'preset-column-widths {\n'
+    '        proportion 0.16667\n'
+    '        proportion 0.25\n'
+    '        proportion 0.33333\n'
+    '        proportion 0.5\n'
+    '        proportion 0.66667\n'
+    '        proportion 0.75\n'
+    '        proportion 0.83333\n'
+    '    }'
+)
+new = re.sub(r'preset-column-widths[ \t]*\{[^}]*\}', new_block, src, count=1)
+if new != src:
+    p.write_text(new)
+PY
+}
+
+# Skipped for snapshot, dry-run, and non-interactive runs.
+post_restore_tweaks() {
+    [[ "$MODE" == "restore" ]] || return 0
+    (( DRY_RUN || ASSUME_YES )) && return 0
+    open_tty
+    echo
+    echo "Post-restore tweaks (press Enter to accept default):"
+
+    if [[ -n "${SELECTED[hypr]:-}" || -n "${SELECTED[noctalia]:-}" ]]; then
+        if [[ "$(ask_yn "  Suspend on idle after 30 min (hypridle + noctalia)?" y)" == "no" ]]; then
+            disable_hypridle_suspend
+            disable_noctalia_suspend
+            echo "    -> suspend-on-idle disabled (lock & screen-off kept)"
+        fi
+    fi
+
+    if [[ -n "${SELECTED[niri]:-}" ]]; then
+        if [[ "$(ask_yn "  4K screen? (use 7-step Mod+R cycle incl. 1/6, 1/4)" n)" == "yes" ]]; then
+            apply_niri_4k_presets
+            echo "    -> niri preset-column-widths set to 7 steps"
+        fi
+    fi
+}
+
 # Reads one line into $REPLY from $TTY_FD; returns 1 on EOF.
 prompt_line() {
     printf '%s' "$1" >&2
@@ -170,6 +263,19 @@ prompt_apply() {
             [Nn]|[Nn][Oo])     echo no; return ;;
             [Aa]|[Aa][Ll][Ll]) echo all; return ;;
             [Qq]|[Qq][Uu][Ii][Tt]) echo quit; return ;;
+        esac
+    done
+}
+
+# Echoes "yes" or "no". $1 = question, $2 = default ("y" or "n").
+ask_yn() {
+    local q="$1" def="${2:-n}" hint
+    [[ "$def" == "y" ]] && hint="[Y/n]" || hint="[y/n]"
+    while true; do
+        prompt_line "$q $hint " || { [[ "$def" == y ]] && echo yes || echo no; return; }
+        case "${REPLY:-$def}" in
+            [Yy]|[Yy][Ee][Ss]) echo yes; return ;;
+            [Nn]|[Nn][Oo])     echo no;  return ;;
         esac
     done
 }
@@ -338,6 +444,8 @@ for i in "${!M_FROM[@]}"; do
     apply_mapping "${M_FROM[i]}" "${M_TO[i]}"
     ((++applied))
 done
+
+post_restore_tweaks
 
 # ---- summary ---------------------------------------------------------------
 
