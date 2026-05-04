@@ -7,7 +7,7 @@ if [ -f "$cache" ] && [ $(( $(date +%s) - $(stat -c %Y "$cache") )) -lt "$ttl" ]
   exit 0
 fi
 
-out=$(claude-usage --waybar --format '{5h_pct}% {5h_reset} | {7d_pct}% {7d_reset}' 2>/dev/null \
+out=$(claude-usage --waybar --format '{icon_plain} {5h_pct}% {5h_reset} | {7d_pct}% {7d_reset}' 2>/dev/null \
   | jq -r '.text // empty' 2>/dev/null \
   | sed -E 's#</?span[^>]*>##g')
 [ -z "$out" ] && out="n/a"
