@@ -1,9 +1,7 @@
 if status is-interactive
-    # Commands to run in interactive sessions can go here
-    if test "$SHLVL" = 1
-        fastfetch
-    end
+    fastfetch
 end
+export PATH="$HOME/.local/bin:$PATH"
 
 # opencode
 fish_add_path /home/oriol/.opencode/bin
@@ -11,7 +9,6 @@ fish_add_path /home/oriol/.opencode/bin
 # aliases
 alias o='opencode'
 alias c='claude'
-
 function m
     printf '\e]11;#0f2228\e\\'
     mosh minisforum-um880
