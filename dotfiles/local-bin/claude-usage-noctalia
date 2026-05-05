@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Wrap `claude-usage --waybar` output for the Noctalia bar's CustomButton widget.
+"""Combine `claude-usage --waybar` and `codex-usage --waybar` into one
+Noctalia CustomButton (parseJson: true) widget.
 
-Waybar's pango-marked-up text and CSS class names don't translate, so this
-script reshapes the JSON: strips pango spans, picks a Noctalia theme colour
-based on the usage tier, and keeps the multi-line tooltip intact.
-
-Output JSON keys consumed by Noctalia's CustomButton (parseJson: true):
-  text       -- plain text shown in the bar (no pango)
-  icon       -- single character / nerd-font glyph rendered as the widget icon
-  tooltip    -- shown on hover
-  iconColor  -- one of: primary, secondary, tertiary, error, none
-  textColor  -- same vocabulary
+Bar text:  "{claude_pct}% {codex_pct}% {claude_reset}"  — only Claude's
+           5h reset time is shown, since both tools have similar windows
+           and the bar has limited width.
+Tooltip:   Claude tooltip, blank line, Codex tooltip — full detail.
+textColor: based on the higher of the two 5h percentages.
 """
 from __future__ import annotations
 
@@ -22,11 +18,6 @@ import sys
 PANGO_SPAN = re.compile(r"<[^>]+>")
 
 
-# Pick a Noctalia colour token by 5-hour usage percentage. Noctalia's
-# CustomButton only accepts primary/secondary/tertiary/error/none — there's no
-# real green/yellow in the default palette, so this is the closest substitute:
-# none (~white) → tertiary (light purple, "green") → primary (light blue,
-# "yellow") → error (red).
 def color_for(percentage: int) -> str:
     if percentage <= 15:
         return "none"
@@ -36,43 +27,60 @@ def color_for(percentage: int) -> str:
         return "primary"
     return "error"
 
-def main() -> int:
+
+def fetch(cmd: list[str]) -> dict | None:
     try:
-        raw = subprocess.check_output(
-            ["claude-usage", "--waybar", "--browser", "chromium"],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        )
+        raw = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
-        sys.stderr.write(f"claude-usage failed: {exc}\n")
-        # Empty output collapses the widget.
-        print(json.dumps({"text": "", "tooltip": ""}))
-        return 0
-
+        sys.stderr.write(f"{cmd[0]} failed: {exc}\n")
+        return None
     try:
-        data = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError:
+        return None
+
+
+def reset_from_text(data: dict) -> str:
+    # waybar text format: "{icon} {pct}% {clock_icon} {reset}" with pango spans.
+    plain = PANGO_SPAN.sub("", data.get("text", "")).strip()
+    parts = plain.split()
+    return parts[-1] if parts else ""
+
+
+def pct(data: dict) -> int:
+    try:
+        return int(data.get("percentage", 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def main() -> int:
+    claude = fetch(["claude-usage", "--waybar", "--browser", "chromium"])
+    codex = fetch(["codex-usage", "--waybar", "--browser", "chromium"])
+
+    if claude is None and codex is None:
         print(json.dumps({"text": "", "tooltip": ""}))
         return 0
 
-    text_in = data.get("text", "")
-    text_plain = PANGO_SPAN.sub("", text_in).strip()
-    tooltip = data.get("tooltip", "")
-    try:
-        percentage = int(data.get("percentage", 0))
-    except (TypeError, ValueError):
-        percentage = 0
-    color = color_for(percentage)
+    claude_pct = pct(claude) if claude else 0
+    codex_pct = pct(codex) if codex else 0
+    claude_reset = reset_from_text(claude) if claude else ""
 
-    print(
-        json.dumps(
-            {
-                "text": text_plain,
-                "tooltip": tooltip,
-                "textColor": color,
-            }
-        )
-    )
+    bits = [f"{claude_pct}%", f"{codex_pct}%"]
+    if claude_reset:
+        bits.append(claude_reset)
+    text = " ".join(bits)
+
+    tooltip_parts = []
+    if claude:
+        tooltip_parts.append("Claude Code\n" + claude.get("tooltip", ""))
+    if codex:
+        tooltip_parts.append("Codex\n" + codex.get("tooltip", ""))
+    tooltip = "\n\n".join(tooltip_parts)
+
+    color = color_for(max(claude_pct, codex_pct))
+
+    print(json.dumps({"text": text, "tooltip": tooltip, "textColor": color}))
     return 0
 
 
