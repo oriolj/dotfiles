@@ -15,24 +15,53 @@
 - for Django + HTMX projects, use **Tailwind CSS + DaisyUI** for UI (via CDN for prototypes, built for production)
 - **i18n capitalization**: For Spanish, Catalan, and French translations, use **sentence case** (only capitalize the first word and proper nouns). English can use Title Case for headings/buttons. Example: "Se registran" not "Se Registran".
 
+## Coolify: Dockerfile vs Docker Compose deploys
+
+- **Single-service backend? Prefer the Dockerfile resource type, not Compose.** Coolify's "Application → Dockerfile" mode supports **blue-green deployments** (build the new container, health-check it, then swap traffic — zero-downtime, instant rollback). The Docker-Compose application buildpack does NOT do blue-green: deploys stop the running stack and bring up the new one, leaving a brief gap where requests 502.
+- Pick Compose only when you genuinely need multi-service orchestration in the same resource (sidecars, init containers, a tightly-coupled stack). Plausible/Grafana/Sentry/Postgres should each be **their own Coolify resource**, not co-deployed with the app — that way the app stays a Dockerfile resource and keeps blue-green.
+- Cost of Dockerfile mode: settings that would live in `docker-compose.yml` (`stop_grace_period`, `restart`, healthcheck, env-var defaults) move into the Coolify UI or into Dockerfile directives (`HEALTHCHECK`, `STOPSIGNAL`). One less file to maintain; harder to grep all config in one place.
+- Migration path: starting Dockerfile-only and switching to Compose later when you add a sidecar is straightforward — point Coolify at the new compose file and re-deploy. Going the other way (Compose → Dockerfile to gain blue-green) means re-creating the resource, which loses Coolify's deployment history for that resource.
+
 ## Coolify Docker Compose Key Findings
 
 - **Don't use `expose` or port mappings for web interface** - Coolify's Traefik routes internally via Docker network, not through host ports. Port mappings interfere with routing.
 - **Only port-map services needing direct access** - e.g., streaming ports (8000), SFTP (2022), databases if needed externally.
 - **Set port in Coolify UI** - Use "Port Exposes" field in dashboard to tell Traefik which internal port to route to (e.g., 80).
-- **DON'T add custom Traefik labels** - Let Coolify auto-generate them. Custom labels like `traefik.http.services.<name>.loadbalancer.server.port` can conflict with Coolify's auto-generated ones and cause bad gateway errors.
-- **Coolify service env vars syntax**:
-  - `${VARIABLE}` - editable in Coolify UI
-  - `${VARIABLE:-default}` - with default value
-  - `SERVICE_PASSWORD_<NAME>` - auto-generated password
-  - `SERVICE_FQDN_<NAME>` - auto-generated FQDN
-  - `SERVICE_USER_<NAME>` - auto-generated username
-  - `SERVICE_URL_<NAME>` - auto-generated URL
-- **Don't define custom Docker networks** - Let Coolify manage networks automatically.
+- **Traefik labels — depends on resource type:**
+  - **Docker Compose application buildpack** (the usual case): Coolify auto-generates Traefik labels. **Don't add custom ones** — they conflict with the auto-generated `traefik.http.services.<name>.loadbalancer.server.port` and cause Bad Gateway.
+  - **Raw Compose Resource** (deploying a service stack directly): Coolify does NOT auto-generate routing labels. You must add `traefik.enable=true`, `traefik.http.routers.<name>.rule=Host(\`...\`)`, `traefik.http.routers.<name>.entryPoints=http` yourself.
+- **Coolify env var substitution syntax (compose file):**
+  - `${VARIABLE}` — editable in Coolify UI; deploy fails if unset
+  - `${VARIABLE:-default}` — optional, falls back to default
+  - `${VARIABLE:?default}` — **required**, default is the UI hint, deploy refuses to start if user clears it
+  - `${VARIABLE:?}` — required, no default
+- **Magic environment variables** (auto-generated and persisted across deployments):
+  - `SERVICE_PASSWORD_<NAME>` / `SERVICE_PASSWORD_<NAME>_64` — random password
+  - `SERVICE_USER_<NAME>` — random 16-char username
+  - `SERVICE_FQDN_<NAME>` — hostname, e.g. `app.example.com`
+  - `SERVICE_URL_<NAME>` — full URL with scheme
+  - `SERVICE_BASE64_<NAME>` / `_64` / `_128` — random base64 string
+  - **Identifier gotcha:** identifiers with `_` cannot specify ports. Use hyphens: `SERVICE_URL_BACKEND-API_8080` ✓, `SERVICE_URL_BACKEND_API_8080` ✗.
+  - Requires Coolify v4.0.0-beta.411+ for compose-file support.
+- **Shared variables across services in a stack** (referenced inside compose file or env vars):
+  - `{{team.NODE_ENV}}` — team-wide
+  - `{{project.NODE_ENV}}` — project-wide
+  - `{{environment.NODE_ENV}}` — environment-wide (production/staging)
+- **Build vs Runtime variable flags:** mark anything the running container needs but the build doesn't (API keys, JWT secrets, DSNs) as **Runtime-only** in the UI. Keeps secrets out of `/artifacts/build-time.env` and out of the build context entirely.
+- **Docker Build Secrets** for build-time-only secrets (e.g. private package tokens during `RUN`): enable "Use Docker Build Secrets" + add `# syntax=docker/dockerfile:1` to Dockerfile. Coolify rewrites `RUN` with `--mount=type=secret`; value never lands in image layers or `docker history`.
+- **Don't define custom Docker networks** — defining `networks:` in your compose puts containers on two networks at once, causing intermittent 504 Gateway Timeouts as Traefik flips IPs non-deterministically.
+- **Cross-stack networking** — services in different compose stacks can't reach each other by service name by default. Enable "Connect to Predefined Network" on the resource; the hostname becomes `<service>-<resource_uuid>`.
 - **App must listen on 0.0.0.0** - Not localhost, or Traefik can't reach it.
-- **For Raw Compose Deployment** - Coolify adds default labels (`coolify.managed`, `coolify.applicationId`, `coolify.type`) automatically if absent.
-- Docs: https://coolify.io/docs/troubleshoot/applications/bad-gateway
+- **Coolify-specific compose extensions:**
+  - `exclude_from_hc: true` on a service — Coolify skips it for stack health (use for one-off migration jobs).
+  - `is_directory: true` on a volume — create empty directory.
+  - `content:` field on a volume — file with inline content (or use top-level `configs`).
+- **For Raw Compose Resource** — Coolify still auto-injects `coolify.managed=true`, `coolify.applicationId=<n>`, `coolify.type=application` if absent.
+- **502 Bad Gateway on small VPS is usually swap, not config.** Check `free -m` first; many VPS providers ship swap disabled.
 - Docs: https://coolify.io/docs/knowledge-base/docker/compose
+- Docs: https://coolify.io/docs/knowledge-base/environment-variables
+- Docs: https://coolify.io/docs/applications/build-packs/docker-compose
+- Docs: https://coolify.io/docs/troubleshoot/applications/bad-gateway
 - to update homepage (gethomepage.dev) run: docker pull ghcr.io/gethomepage/homepage:latest
 
 ## Docker Signal Handling for Fast Deployments
