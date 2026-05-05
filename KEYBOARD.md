@@ -31,8 +31,8 @@ Focus a column → add `Shift` → focus a monitor. Move a window → add
 niri leaves most letters in `Mod+Shift+` unbound; this repo uses them
 for app launchers: `Mod+Shift+B` browser, `Mod+Shift+E` emoji,
 `Mod+Shift+A` gemini, `Mod+Shift+C` calendar, `Mod+Shift+G` gmail,
-`Mod+Shift+M` mosh-remote, `Mod+Shift+O` obsidian, `Mod+Shift+T`
-telegram, `Mod+Shift+W` whatsapp, `Mod+Shift+X` x.com.
+`Mod+Shift+M` mosh-remote, `Mod+Shift+N` keep, `Mod+Shift+O` obsidian,
+`Mod+Shift+T` telegram, `Mod+Shift+W` whatsapp, `Mod+Shift+X` x.com.
 
 Letters claimed by niri defaults stay as defaults — apps avoid
 `Mod+Shift+H/J/K/L` (focus-monitor) and `Mod+Shift+R` (column-width-back).
