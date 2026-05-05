@@ -182,9 +182,13 @@ layout {
         // Color of the border around windows that request your attention.
         urgent-color "#9b0000"
 
+        // Workspace-relative gradient: the gradient is mapped across the
+        // entire workspace view, so as you scroll columns the visible slice
+        // of the gradient shifts. Start subtle — tune colors/angle below.
+        active-gradient from="#33ccff" to="#9b6bff" angle=45 relative-to="workspace-view"
+
         // Gradients can use a few different interpolation color spaces.
-        // For example, this is a pastel rainbow gradient via in="oklch longer hue".
-        //
+        // For a pastel rainbow effect, swap the line above for:
         // active-gradient from="#e5989b" to="#ffb4a2" angle=45 relative-to="workspace-view" in="oklch longer hue"
 
         // inactive-gradient from="#505050" to="#808080" angle=45 relative-to="workspace-view"
