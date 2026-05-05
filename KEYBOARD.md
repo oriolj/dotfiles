@@ -16,7 +16,7 @@ binding keeps the WM out of every app's namespace.
 
 | Layer            | Verb                                  | Scale         | Example                                                                |
 | ---              | ---                                   | ---           | ---                                                                    |
-| `Mod`            | focus / act on focused window-column  | window/column | `Mod+H` focus left, `Mod+T` terminal, `Mod+V` floating, `Mod+Q` close  |
+| `Mod`            | focus / act on focused window-column  | window/column | `Mod+H` focus left, `Mod+Return` terminal, `Mod+V` floating, `Mod+Q` close |
 | `Mod+Shift`      | same verb at larger scale             | monitor / ws  | `Mod+Shift+H` focus monitor left, `Mod+Shift+U` move workspace down    |
 | `Mod+Ctrl`       | move / send the focused thing         | window/column | `Mod+Ctrl+H` move column left, `Mod+Ctrl+1` send window to ws 1        |
 | `Mod+Ctrl+Shift` | move at larger scale                  | monitor       | `Mod+Ctrl+Shift+H` move column to monitor left                         |
@@ -31,7 +31,8 @@ Focus a column → add `Shift` → focus a monitor. Move a window → add
 niri leaves most letters in `Mod+Shift+` unbound; this repo uses them
 for app launchers: `Mod+Shift+B` browser, `Mod+Shift+E` emoji,
 `Mod+Shift+A` gemini, `Mod+Shift+C` calendar, `Mod+Shift+G` gmail,
-`Mod+Shift+M` mosh-remote, `Mod+Shift+O` obsidian, `Mod+Shift+X` x.com.
+`Mod+Shift+M` mosh-remote, `Mod+Shift+O` obsidian, `Mod+Shift+T`
+telegram, `Mod+Shift+X` x.com.
 
 Letters claimed by niri defaults stay as defaults — apps avoid
 `Mod+Shift+H/J/K/L` (focus-monitor) and `Mod+Shift+R` (column-width-back).
