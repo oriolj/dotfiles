@@ -466,9 +466,8 @@ window-rule {
     // block-out-from "screencast"
 }
 
-// Example: enable rounded corners for all windows.
-// (This example rule is commented out with a "/-" in front.)
-/-window-rule {
+// Rounded corners for all windows.
+window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
 }
@@ -490,8 +489,11 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     // Mod+T matches niri's upstream default (was alacritty there; we use kitty).
-    Mod+T       hotkey-overlay-title="Tiled terminal: kitty" { spawn "kitty"; }
-    Mod+Shift+T hotkey-overlay-title="Floating terminal: kitty" { spawn "kitty" "--class" "kitty-float"; }
+    // Mod+Return is the hyprland-style alias; both are kept so muscle memory works either way.
+    Mod+T            hotkey-overlay-title="Tiled terminal: kitty" { spawn "kitty"; }
+    Mod+Return       hotkey-overlay-title="Tiled terminal: kitty" { spawn "kitty"; }
+    Mod+Shift+T      hotkey-overlay-title="Floating terminal: kitty" { spawn "kitty" "--class" "kitty-float"; }
+    Mod+Shift+Return hotkey-overlay-title="Floating terminal: kitty" { spawn "kitty" "--class" "kitty-float"; }
     Mod+Space hotkey-overlay-title="Run an Application: noctalia launcher" { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
     Mod+Shift+Space hotkey-overlay-title="Curated Launcher: raffi" { spawn "raffi"; }
     Mod+Alt+Tab hotkey-overlay-title="Window switcher: noctalia launcher" { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "windows"; }
