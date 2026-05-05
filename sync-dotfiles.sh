@@ -22,6 +22,7 @@ declare -a MAPPINGS=(
     "$HOME/.config/fuzzel/fuzzel.ini|fuzzel/fuzzel.ini"
     "$HOME/.config/raffi/raffi.yaml|raffi/raffi.yaml"
     "$HOME/.config/alacritty/alacritty.toml|alacritty/alacritty.toml"
+    "$HOME/.config/kitty/kitty.conf|kitty/kitty.conf"
     "$HOME/.config/fastfetch/config.jsonc|fastfetch/config.jsonc"
     "$HOME/.config/chromium-flags.conf|chromium/chromium-flags.conf"
     "$HOME/.config/fish/config.fish|fish/config.fish"
