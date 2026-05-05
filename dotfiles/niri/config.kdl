@@ -232,8 +232,8 @@ layout {
     struts {
         left 16
         right 16
-        // top 64
-        // bottom 64
+        top 16
+        bottom 16
     }
 
     // Vertical pill on the left of a tabbed column (Mod+W toggle).
