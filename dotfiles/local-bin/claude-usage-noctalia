@@ -11,11 +11,9 @@ textColor: based on the higher of the two 5h percentages.
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import sys
-
-PANGO_SPAN = re.compile(r"<[^>]+>")
+from concurrent.futures import ThreadPoolExecutor
 
 
 def color_for(percentage: int) -> str:
@@ -40,47 +38,44 @@ def fetch(cmd: list[str]) -> dict | None:
         return None
 
 
-def reset_from_text(data: dict) -> str:
-    # waybar text format: "{icon} {pct}% {clock_icon} {reset}" with pango spans.
-    plain = PANGO_SPAN.sub("", data.get("text", "")).strip()
-    parts = plain.split()
-    return parts[-1] if parts else ""
-
-
-def pct(data: dict) -> int:
-    try:
-        return int(data.get("percentage", 0))
-    except (TypeError, ValueError):
-        return 0
+def pct(data: dict | None) -> int:
+    return int(data.get("percentage", 0)) if data else 0
 
 
 def main() -> int:
-    claude = fetch(["claude-usage", "--waybar", "--browser", "chromium"])
-    codex = fetch(["codex-usage", "--waybar", "--browser", "chromium"])
+    # --format '{reset}' makes each tool's JSON `text` field just the reset
+    # string (no pango), so we can read it directly without a regex strip.
+    cmds = [
+        ["claude-usage", "--waybar", "--browser", "chromium", "--format", "{reset}"],
+        ["codex-usage", "--waybar", "--browser", "chromium", "--format", "{reset}"],
+    ]
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        claude, codex = list(ex.map(fetch, cmds))
 
     if claude is None and codex is None:
         print(json.dumps({"text": "", "tooltip": ""}))
         return 0
 
-    claude_pct = pct(claude) if claude else 0
-    codex_pct = pct(codex) if codex else 0
-    claude_reset = reset_from_text(claude) if claude else ""
+    claude_pct = pct(claude)
+    codex_pct = pct(codex)
+    claude_reset = claude.get("text", "") if claude else ""
 
     bits = [f"{claude_pct}%", f"{codex_pct}%"]
     if claude_reset:
         bits.append(claude_reset)
     text = " ".join(bits)
 
-    tooltip_parts = []
-    if claude:
-        tooltip_parts.append("Claude Code\n" + claude.get("tooltip", ""))
-    if codex:
-        tooltip_parts.append("Codex\n" + codex.get("tooltip", ""))
-    tooltip = "\n\n".join(tooltip_parts)
+    tooltip = "\n\n".join(
+        f"{label}\n{data.get('tooltip', '')}"
+        for label, data in (("Claude Code", claude), ("Codex", codex))
+        if data
+    )
 
-    color = color_for(max(claude_pct, codex_pct))
-
-    print(json.dumps({"text": text, "tooltip": tooltip, "textColor": color}))
+    print(json.dumps({
+        "text": text,
+        "tooltip": tooltip,
+        "textColor": color_for(max(claude_pct, codex_pct)),
+    }))
     return 0
 
 
