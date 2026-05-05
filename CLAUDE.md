@@ -17,16 +17,18 @@ repo holds the *files themselves*.
 
 ## Edit flow
 
-1. Edit live: `~/.config/foo/foo.conf`.
-2. From this repo: `./sync-dotfiles.sh snapshot`.
-3. `git diff dotfiles/` → review → commit.
+For a config change, edit *both* the live file (`~/.config/foo/foo.conf`)
+**and** the matching repo copy (`dotfiles/foo/foo.conf`) directly with
+targeted edits, then `git diff dotfiles/` → review → commit.
 
-**Never edit files inside `dotfiles/` directly.** They will be silently
-overwritten on the next `snapshot` run.
+**Do not run `./sync-dotfiles.sh snapshot` automatically.** The repo is
+shared across machines with different hardware; snapshot pulls in
+machine-local drift (per-monitor outputs, resolution-tuned column
+widths, hardware-tied autostarts) that shouldn't propagate. Only run
+snapshot when the user explicitly asks.
 
 The mapping table lives in the `MAPPINGS` array at the top of
-`sync-dotfiles.sh`. To track a new file, add an entry there and run
-`snapshot`.
+`sync-dotfiles.sh`. To track a new file, add an entry there.
 
 ## Public-repo guardrails
 
