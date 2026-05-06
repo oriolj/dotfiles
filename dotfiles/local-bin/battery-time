@@ -1,0 +1,30 @@
+#!/bin/bash
+shopt -s nullglob
+files=(/sys/class/power_supply/BAT*/energy_now)
+(( ${#files[@]} == 0 )) && exit 0
+bat=${files[0]%/energy_now}
+
+power_uw=$(< "$bat/power_now")
+(( power_uw == 0 )) && exit 0
+
+energy_uwh=$(< "$bat/energy_now")
+full_uwh=$(< "$bat/energy_full")
+status=$(< "$bat/status")
+
+case $status in
+    Discharging) remaining=$energy_uwh ;;
+    Charging)    remaining=$(( full_uwh - energy_uwh )) ;;
+    *)           exit 0 ;;
+esac
+
+(( remaining <= 0 )) && exit 0
+
+minutes=$(( (remaining * 60 + power_uw / 2) / power_uw ))
+h=$(( minutes / 60 ))
+m=$(( minutes % 60 ))
+
+if (( h > 0 )); then
+    printf '%dh%02dm\n' "$h" "$m"
+else
+    printf '%dm\n' "$m"
+fi

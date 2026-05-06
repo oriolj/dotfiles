@@ -36,6 +36,7 @@ declare -a MAPPINGS=(
     "$HOME/.config/noctalia|noctalia"
     "$HOME/.local/bin/claude-usage-noctalia|local-bin/claude-usage-noctalia"
     "$HOME/.local/bin/battery-watts|local-bin/battery-watts"
+    "$HOME/.local/bin/battery-time|local-bin/battery-time"
     "$HOME/.local/bin/toggl-noctalia|local-bin/toggl-noctalia"
     "$HOME/.local/bin/notification-activate|local-bin/notification-activate"
     "$HOME/.XCompose|XCompose"

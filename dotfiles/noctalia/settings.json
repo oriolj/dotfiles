@@ -401,6 +401,41 @@
                     "id": "Battery",
                     "showNoctaliaPerformance": false,
                     "showPowerProfiles": true
+                },
+                {
+                    "colorizeSystemIcon": "none",
+                    "colorizeSystemText": "none",
+                    "generalTooltipText": "Battery time remaining",
+                    "hideMode": "alwaysExpanded",
+                    "icon": "schedule",
+                    "iconPosition": "left",
+                    "id": "CustomButton",
+                    "ipcIdentifier": "batteryTime",
+                    "leftClickExec": "",
+                    "leftClickUpdateText": false,
+                    "maxTextLength": {
+                        "horizontal": 10,
+                        "vertical": 8
+                    },
+                    "middleClickExec": "",
+                    "middleClickUpdateText": false,
+                    "parseJson": false,
+                    "rightClickExec": "",
+                    "rightClickUpdateText": false,
+                    "showExecTooltip": false,
+                    "showIcon": false,
+                    "showTextTooltip": true,
+                    "textCollapse": "",
+                    "textCommand": "/home/oriol/.local/bin/battery-time",
+                    "textIntervalMs": 30000,
+                    "textStream": false,
+                    "wheelDownExec": "",
+                    "wheelDownUpdateText": false,
+                    "wheelExec": "",
+                    "wheelMode": "unified",
+                    "wheelUpExec": "",
+                    "wheelUpUpdateText": false,
+                    "wheelUpdateText": false
                 }
             ]
         }
