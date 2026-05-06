@@ -1,0 +1,15 @@
+{
+  "id": "docker-count",
+  "name": "Docker Count",
+  "version": "1.0.0",
+  "author": "oriol",
+  "description": "Shows the number of running Docker containers; click to open lazydocker in a floating kitty terminal. Hidden when the Docker daemon isn't running.",
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "metadata": {
+    "defaultSettings": {
+      "refreshInterval": 5000
+    }
+  }
+}
