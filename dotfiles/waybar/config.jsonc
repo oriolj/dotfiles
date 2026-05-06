@@ -86,10 +86,10 @@
         "on-click": "ghostty --class=com.mitchellh.ghostty.btop -e btop"
     },
     "custom/claude-usage": {
-        "exec": "claude-usage --waybar --browser chromium",
+        "exec": "claude-usage --waybar --browser brave",
         "return-type": "json",
         "interval": 120,
-        "on-click": "claude-usage --waybar --browser chromium"
+        "on-click": "claude-usage --waybar --browser brave"
     },
     "custom/toggl": {
         "exec": "/home/oriol/.local/bin/toggl-cli waybar",
@@ -114,7 +114,7 @@
         "format": "{}",
         "tooltip": true,
         "on-click": "sh -c 'if systemctl --user is-active --quiet syncthing.service; then systemctl --user stop syncthing.service; else systemctl --user start syncthing.service; fi'",
-        "on-click-right": "chromium --app=http://127.0.0.1:8384"
+        "on-click-right": "brave --app=http://127.0.0.1:8384"
     },
     "custom/tailscale": {
         "exec": "~/.config/waybar/scripts/tailscale.sh",

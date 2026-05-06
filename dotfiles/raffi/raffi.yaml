@@ -4,19 +4,19 @@
 
 binaries:
   gemini:
-    binary: chromium
+    binary: brave
     args: ["--app=https://gemini.google.com"]
     description: Gemini (web app)
     icon: google-chrome
 
   chatgpt:
-    binary: chromium
+    binary: brave
     args: ["--app=https://chat.openai.com"]
     description: ChatGPT (web app)
     icon: google-chrome
 
   calendar:
-    binary: chromium
+    binary: brave
     args: ["--app=https://calendar.google.com"]
     description: Google Calendar
     icon: x-office-calendar

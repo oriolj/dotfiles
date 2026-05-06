@@ -508,21 +508,21 @@ binds {
     // For example, this is a standard bind to toggle the screen reader (orca).
     Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
 
-    // App launchers (chromium app mode). Mirrors the Hyprland session's
+    // App launchers (brave app mode). Mirrors the Hyprland session's
     // bindings, except Mod+Shift+Alt+A which is claude.ai here (Hyprland uses
     // chatgpt there).
-    Mod+Shift+B     hotkey-overlay-title="Browser (firefox)"     { spawn "firefox" "--new-window"; }
+    Mod+Shift+B     hotkey-overlay-title="Browser (brave)"       { spawn "brave" "--new-window"; }
     Mod+Shift+E     hotkey-overlay-title="Emoji picker (noctalia)" { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "emoji"; }
-    Mod+Shift+A     hotkey-overlay-title="Gemini (app)"          { spawn "chromium" "--app=https://gemini.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+Alt+A hotkey-overlay-title="Claude (app)"          { spawn "chromium" "--app=https://claude.ai" "--ozone-platform=wayland"; }
-    Mod+Shift+C     hotkey-overlay-title="Google Calendar (app)" { spawn "chromium" "--app=https://calendar.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+G     hotkey-overlay-title="Gmail (app)"           { spawn "chromium" "--app=https://mail.google.com" "--ozone-platform=wayland"; }
-    Mod+Shift+N     hotkey-overlay-title="Google Keep (app)"     { spawn "chromium" "--app=https://keep.google.com" "--ozone-platform=wayland"; }
+    Mod+Shift+A     hotkey-overlay-title="Gemini (app)"          { spawn "brave" "--app=https://gemini.google.com" "--ozone-platform=wayland"; }
+    Mod+Shift+Alt+A hotkey-overlay-title="Claude (app)"          { spawn "brave" "--app=https://claude.ai" "--ozone-platform=wayland"; }
+    Mod+Shift+C     hotkey-overlay-title="Google Calendar (app)" { spawn "brave" "--app=https://calendar.google.com" "--ozone-platform=wayland"; }
+    Mod+Shift+G     hotkey-overlay-title="Gmail (app)"           { spawn "brave" "--app=https://mail.google.com" "--ozone-platform=wayland"; }
+    Mod+Shift+N     hotkey-overlay-title="Google Keep (app)"     { spawn "brave" "--app=https://keep.google.com" "--ozone-platform=wayland"; }
     Mod+Shift+O     hotkey-overlay-title="Obsidian"              { spawn "obsidian"; }
     Mod+Shift+S     hotkey-overlay-title="Signal"                { spawn "signal-desktop"; }
-    Mod+Shift+T     hotkey-overlay-title="Telegram (app)"        { spawn "chromium" "--app=https://web.telegram.org" "--ozone-platform=wayland"; }
-    Mod+Shift+W     hotkey-overlay-title="WhatsApp (app)"        { spawn "chromium" "--app=https://web.whatsapp.com" "--ozone-platform=wayland"; }
-    Mod+Shift+X     hotkey-overlay-title="X (app)"               { spawn "chromium" "--app=https://x.com" "--ozone-platform=wayland"; }
+    Mod+Shift+T     hotkey-overlay-title="Telegram (app)"        { spawn "brave" "--app=https://web.telegram.org" "--ozone-platform=wayland"; }
+    Mod+Shift+W     hotkey-overlay-title="WhatsApp (app)"        { spawn "brave" "--app=https://web.whatsapp.com" "--ozone-platform=wayland"; }
+    Mod+Shift+X     hotkey-overlay-title="X (app)"               { spawn "brave" "--app=https://x.com" "--ozone-platform=wayland"; }
 
     // Remote shell to minisforum-um880 (mosh). Teal-tinted background + teal
     // active border via the kitty-remote-dev class so it's obvious the

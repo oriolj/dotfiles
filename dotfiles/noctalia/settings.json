@@ -197,7 +197,7 @@
                     "middleClickExec": "",
                     "middleClickUpdateText": false,
                     "parseJson": true,
-                    "rightClickExec": "chromium --app=http://127.0.0.1:8384",
+                    "rightClickExec": "brave --app=http://127.0.0.1:8384",
                     "rightClickUpdateText": false,
                     "showExecTooltip": false,
                     "showIcon": true,
@@ -277,7 +277,7 @@
                     "iconPosition": "left",
                     "id": "CustomButton",
                     "ipcIdentifier": "claudeUsage",
-                    "leftClickExec": "/usr/bin/claude-usage --waybar --browser chromium",
+                    "leftClickExec": "/usr/bin/claude-usage --waybar --browser brave",
                     "leftClickUpdateText": true,
                     "maxTextLength": {
                         "horizontal": 24,
