@@ -38,6 +38,7 @@ dotfiles/
   fuzzel/        fuzzel.ini
   raffi/         raffi.yaml (curated launcher)
   alacritty/     alacritty.toml
+  brave/         managed-policy JSON (disables Wallet/VPN/Leo/Rewards)
   chromium/      chromium-flags.conf
   fish/          config.fish, fish_plugins
   tmux/          tmux.conf + tmux/ (plugins, scripts)

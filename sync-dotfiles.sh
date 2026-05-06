@@ -27,6 +27,7 @@ declare -a MAPPINGS=(
     "$HOME/.ssh/config.d/term.conf|ssh/config.d/term.conf"
     "$HOME/.config/fastfetch/config.jsonc|fastfetch/config.jsonc"
     "$HOME/.config/chromium-flags.conf|chromium/chromium-flags.conf"
+    "$HOME/.config/brave-flags.conf|brave/brave-flags.conf"
     "$HOME/.config/fish/config.fish|fish/config.fish"
     "$HOME/.config/fish/fish_plugins|fish/fish_plugins"
     "$HOME/.config/fish/functions/tm.fish|fish/functions/tm.fish"
