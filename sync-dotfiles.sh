@@ -39,6 +39,7 @@ declare -a MAPPINGS=(
     "$HOME/.local/bin/battery-time|local-bin/battery-time"
     "$HOME/.local/bin/toggl-noctalia|local-bin/toggl-noctalia"
     "$HOME/.local/bin/notification-activate|local-bin/notification-activate"
+    "$HOME/.local/bin/focus-or-spawn|local-bin/focus-or-spawn"
     "$HOME/.XCompose|XCompose"
     "$HOME/.tmux.conf|tmux/tmux.conf"
     "$HOME/.tmux|tmux/tmux"
