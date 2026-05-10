@@ -58,11 +58,12 @@ input {
     }
 
     // Warp the mouse to the center of newly focused windows (e.g. on keyboard focus change).
-    // Disabled: focus-follows-mouse is enough — keyboard focus changes shouldn't yank the cursor.
+    // Disabled: keyboard focus changes shouldn't yank the cursor.
     // warp-mouse-to-focus
 
     // Focus windows and outputs automatically when moving the mouse into them.
-    focus-follows-mouse
+    // Disabled: keyboard focus is the source of truth; cursor hover shouldn't steal it.
+    // focus-follows-mouse
 }
 
 // You can configure outputs by their name, which you can find
