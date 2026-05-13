@@ -398,10 +398,13 @@ window-rule {
     default-window-height { fixed 600; }
 }
 
-// Kuro (to-do client): tiled, default column width 1/3 of the screen.
+// Kuro (to-do client): floating. Kuro is Electron 41 and reports the
+// generic "electron" app-id, so we disambiguate by title.
 window-rule {
-    match app-id=r#"^Kuro$"#
-    default-column-width { proportion 0.33333; }
+    match app-id=r#"^electron$"# title=r#"^Kuro$"#
+    open-floating true
+    default-column-width { fixed 950; }
+    default-window-height { fixed 1414; }
 }
 
 // satty: floating, roomier size for annotation.
