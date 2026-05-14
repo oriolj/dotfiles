@@ -1,13 +1,23 @@
 #!/bin/bash
+# Emits JSON for noctalia's CustomButton (parseJson: true). Colours the text
+# by absolute power draw: >10W tertiary (yellow), >20W primary (orange),
+# >30W error (red). Theme palette in noctalia/colors.json.
 shopt -s nullglob
 files=(/sys/class/power_supply/BAT*/power_now)
-(( ${#files[@]} == 0 )) && exit 0
+(( ${#files[@]} == 0 )) && { printf '{"text":""}\n'; exit 0; }
 power_uw=$(< "${files[0]}")
-(( power_uw == 0 )) && exit 0
+(( power_uw == 0 )) && { printf '{"text":""}\n'; exit 0; }
 case $(< "${files[0]%/power_now}/status") in
     Charging)    sign=+ ;;
     Discharging) sign=- ;;
     *)           sign=  ;;
 esac
 deci=$(( (power_uw + 50000) / 100000 ))
-printf '%s%d.%dW\n' "$sign" $((deci / 10)) $((deci % 10))
+whole=$((deci / 10))
+text=$(printf '%s%d.%dW' "$sign" "$whole" $((deci % 10)))
+if   (( whole > 30 )); then color=error
+elif (( whole > 20 )); then color=primary
+elif (( whole > 10 )); then color=tertiary
+else                        color=none
+fi
+printf '{"text":"%s","textColor":"%s"}\n' "$text" "$color"

@@ -375,7 +375,7 @@
                     },
                     "middleClickExec": "",
                     "middleClickUpdateText": false,
-                    "parseJson": false,
+                    "parseJson": true,
                     "rightClickExec": "",
                     "rightClickUpdateText": false,
                     "showExecTooltip": false,
