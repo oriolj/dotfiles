@@ -16,6 +16,7 @@ declare -a MAPPINGS=(
     "$HOME/.config/hypr/hyprpaper.conf|hypr/hyprpaper.conf"
     "$HOME/.config/hypr/scripts|hypr/scripts"
     "$HOME/.config/niri/config.kdl|niri/config.kdl"
+    "$HOME/.config/niri/scripts|niri/scripts"
     "$HOME/.config/waybar/config.jsonc|waybar/config.jsonc"
     "$HOME/.config/waybar/style.css|waybar/style.css"
     "$HOME/.config/waybar/scripts|waybar/scripts"

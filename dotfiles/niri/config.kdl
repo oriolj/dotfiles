@@ -498,6 +498,11 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+K           hotkey-overlay-title="Show hotkey overlay" { show-hotkey-overlay; }
 
+    // Adjust the focused output's scale via helper script.
+    Mod+Ctrl+Equal hotkey-overlay-title="Increase Monitor Scale" { spawn "/home/oriol/.config/niri/scripts/output-scale.sh" "+0.5"; }
+    Mod+Ctrl+Minus hotkey-overlay-title="Decrease Monitor Scale" { spawn "/home/oriol/.config/niri/scripts/output-scale.sh" "-0.5"; }
+    Mod+Ctrl+0     hotkey-overlay-title="Reset Monitor Scale"    { spawn "/home/oriol/.config/niri/scripts/output-scale.sh" "=1.0"; }
+
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     // Terminal lives on Mod+Return. Mod+T is intentionally left unbound.
     Mod+Return       hotkey-overlay-title="Tiled terminal: kitty" { spawn "kitty"; }
