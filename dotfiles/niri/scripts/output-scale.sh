@@ -28,5 +28,6 @@ new=$(awk -v n="$new" 'BEGIN {
 
 niri msg output "$name" scale "$new"
 
+old=$(awk -v c="$current" 'BEGIN { printf "%.2f", c }')
 notify-send -a "niri" -h string:x-canonical-private-synchronous:output-scale \
-    "Monitor scale" "$name: ${new}×"
+    "Monitor scale" "$name: ${old}× → ${new}×"
