@@ -494,9 +494,8 @@ binds {
     // `niri msg action do-something`.
 
     // Mod-Shift-/, which is usually the same as Mod-?,
-    // shows a list of important hotkeys. Mod+K mirrors Omarchy.
+    // shows a list of important hotkeys.
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Mod+K           hotkey-overlay-title="Show hotkey overlay" { show-hotkey-overlay; }
 
     // Adjust the focused output's scale via helper script.
     Mod+Ctrl+Equal hotkey-overlay-title="Increase Monitor Scale" { spawn "/home/oriol/.config/niri/scripts/output-scale.sh" "+0.5"; }
@@ -581,6 +580,7 @@ binds {
     Mod+Right { focus-column-right; }
     Mod+H     { focus-column-left; }
     Mod+J     { focus-window-down; }
+    Mod+K     { focus-window-up; }
     Mod+L     { focus-column-right; }
 
     Mod+Ctrl+Left  { move-column-left; }
