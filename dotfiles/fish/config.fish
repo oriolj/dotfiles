@@ -7,8 +7,20 @@ export PATH="$HOME/.local/bin:$PATH"
 fish_add_path /home/oriol/.opencode/bin
 
 # aliases
-alias o='opencode'
-alias c='claude'
+function o
+    if not set -q TMUX
+        echo "o: refusing to run opencode outside tmux. Start/attach a tmux session first." >&2
+        return 1
+    end
+    command opencode $argv
+end
+function c
+    if not set -q TMUX
+        echo "c: refusing to run claude outside tmux. Start/attach a tmux session first." >&2
+        return 1
+    end
+    command claude $argv
+end
 # Remote sessions tint the terminal background so it's obvious at a glance
 # that input isn't going to the local box. OSC 11 sets the background; OSC 111
 # resets it to the configured default when the session ends.
