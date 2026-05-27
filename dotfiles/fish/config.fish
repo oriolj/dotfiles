@@ -1,5 +1,8 @@
 if status is-interactive
-    fastfetch
+    # Only greet in the top-level shell, not nested subshells.
+    if test "$SHLVL" = 1
+        fastfetch
+    end
 end
 export PATH="$HOME/.local/bin:$PATH"
 
