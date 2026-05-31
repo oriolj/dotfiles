@@ -27,6 +27,31 @@ snapshot.
   and explained.
 - See [`KEYBOARD.md`](KEYBOARD.md) for the keybinding grammar.
 
+## Shell shortcuts (fish)
+
+Per-directory tmux helpers defined in `fish/config.fish` and
+`fish/functions/`.
+
+**Naming convention:** the session is named after the **basename of the
+current directory**, with `.` and `:` (which tmux forbids in session
+names) replaced by `_`. So `~/git/oriolj/dotfiles` → session `dotfiles`,
+and `~/.config/nvim` → session `nvim`. All six commands below derive the
+same name from `$PWD`, so running any of them from the same directory
+targets the same session.
+
+| cmd  | does                                                                                          |
+|------|-----------------------------------------------------------------------------------------------|
+| `t`  | create or attach the dir's tmux session                                                       |
+| `tn` | join the dir's session via a **grouped** client — shares windows/panes but navigates independently, and self-destroys on detach |
+| `c`  | run `claude`; outside tmux, do `t` first (launch claude in a freshly-created session) then attach |
+| `cn` | like `c`, but join via a grouped client (the `tn` pattern)                                     |
+| `o`  | same as `c` for `opencode`                                                                     |
+| `on` | same as `cn` for `opencode`                                                                     |
+
+`c`/`o`/`cn`/`on` run the tool directly when already inside tmux. Use
+`tn`/`cn`/`on` from a second terminal to get an independent view of an
+existing session.
+
 ## Layout
 
 ```
