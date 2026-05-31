@@ -11,18 +11,30 @@ fish_add_path /home/oriol/.opencode/bin
 
 # aliases
 function o
-    if not set -q TMUX
-        echo "o: refusing to run opencode outside tmux. Start/attach a tmux session first." >&2
-        return 1
+    if set -q TMUX
+        command opencode $argv
+        return
     end
-    command opencode $argv
+    # Outside tmux: behave like `t` then `o` — create/attach the dir's session
+    # and launch opencode inside a freshly-created one.
+    set -l name (string replace -a -r '[.:]' '_' (basename $PWD))
+    if tmux new-session -d -s $name -c $PWD 2>/dev/null
+        tmux send-keys -t $name "opencode $argv" Enter
+    end
+    tmux attach -t $name
 end
 function c
-    if not set -q TMUX
-        echo "c: refusing to run claude outside tmux. Start/attach a tmux session first." >&2
-        return 1
+    if set -q TMUX
+        command claude $argv
+        return
     end
-    command claude $argv
+    # Outside tmux: behave like `t` then `c` — create/attach the dir's session
+    # and launch claude inside a freshly-created one.
+    set -l name (string replace -a -r '[.:]' '_' (basename $PWD))
+    if tmux new-session -d -s $name -c $PWD 2>/dev/null
+        tmux send-keys -t $name "claude $argv" Enter
+    end
+    tmux attach -t $name
 end
 # Remote sessions tint the terminal background so it's obvious at a glance
 # that input isn't going to the local box. OSC 11 sets the background; OSC 111

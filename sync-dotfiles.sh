@@ -32,6 +32,8 @@ declare -a MAPPINGS=(
     "$HOME/.config/fish/config.fish|fish/config.fish"
     "$HOME/.config/fish/fish_plugins|fish/fish_plugins"
     "$HOME/.config/fish/functions/tm.fish|fish/functions/tm.fish"
+    "$HOME/.config/fish/functions/t.fish|fish/functions/t.fish"
+    "$HOME/.config/fish/functions/tn.fish|fish/functions/tn.fish"
     "$HOME/.claude/CLAUDE.md|claude/CLAUDE.md"
     "$HOME/.claude/statusline-command.sh|claude/statusline-command.sh"
     "$HOME/.config/noctalia|noctalia"
