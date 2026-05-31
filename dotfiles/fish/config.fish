@@ -23,6 +23,19 @@ function o
     end
     tmux attach -t $name
 end
+function on
+    if set -q TMUX
+        command opencode $argv
+        return
+    end
+    # tn-style: ensure the dir's session exists (launch opencode in a fresh one),
+    # then join it via a grouped, independently-navigable client.
+    set -l name (string replace -a -r '[.:]' '_' (basename $PWD))
+    if tmux new-session -d -s $name -c $PWD 2>/dev/null
+        tmux send-keys -t $name "opencode $argv" Enter
+    end
+    tmux new-session -t $name \; set-option destroy-unattached on
+end
 function c
     if set -q TMUX
         command claude $argv
@@ -35,6 +48,19 @@ function c
         tmux send-keys -t $name "claude $argv" Enter
     end
     tmux attach -t $name
+end
+function cn
+    if set -q TMUX
+        command claude $argv
+        return
+    end
+    # tn-style: ensure the dir's session exists (launch claude in a fresh one),
+    # then join it via a grouped, independently-navigable client.
+    set -l name (string replace -a -r '[.:]' '_' (basename $PWD))
+    if tmux new-session -d -s $name -c $PWD 2>/dev/null
+        tmux send-keys -t $name "claude $argv" Enter
+    end
+    tmux new-session -t $name \; set-option destroy-unattached on
 end
 # Remote sessions tint the terminal background so it's obvious at a glance
 # that input isn't going to the local box. OSC 11 sets the background; OSC 111
