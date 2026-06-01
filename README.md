@@ -26,6 +26,7 @@ snapshot.
   port across machines. Keep the diff against the default config small
   and explained.
 - See [`KEYBOARD.md`](KEYBOARD.md) for the keybinding grammar.
+- See [`POWER.md`](POWER.md) for power consumption & management notes.
 
 ## Shell shortcuts (fish)
 
