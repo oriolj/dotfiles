@@ -77,6 +77,10 @@ output "eDP-1" {
     mode "1920x1200"
     scale 1
     transform "normal"
+    // on-demand: engages VRR only for fullscreen clients that request it (video/games),
+    // no always-on panel shimmer. Note: does NOT help continuous-redraw clients
+    // (TUIs, live dashboards) — they submit frames at full rate regardless.
+    variable-refresh-rate on-demand=true
 }
 
 // Settings that influence how windows are positioned and sized.
