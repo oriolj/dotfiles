@@ -698,7 +698,7 @@
         "resumeSuspendCommand": "",
         "screenOffCommand": "",
         "screenOffTimeout": 600,
-        "suspendCommand": "",
+        "suspendCommand": "[ \"$(cat /sys/class/power_supply/AC/online)\" = \"1\" ] || systemctl suspend",
         "suspendTimeout": 0
     },
     "location": {

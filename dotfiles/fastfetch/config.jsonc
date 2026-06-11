@@ -29,6 +29,11 @@
         },
         "localip",
         "battery",
+        {
+            "type": "command",
+            "key": "Battery Health",
+            "text": "awk 'NR==1{f=$0} NR==2{printf \"%.0f%%\", f*100/$0}' /sys/class/power_supply/BAT0/energy_full /sys/class/power_supply/BAT0/energy_full_design"
+        },
         "poweradapter",
         "locale"
     ]
