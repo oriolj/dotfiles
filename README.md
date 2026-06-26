@@ -69,9 +69,15 @@ dotfiles/
   fish/          config.fish, fish_plugins
   tmux/          tmux.conf + tmux/ (plugins, scripts)
   local-bin/     small helper binaries (claude-usage-noctalia, toggl-noctalia, …)
+  geoclue/       geoclue.conf (system file from /etc; BeaconDB wifi source)
   XCompose       custom compose-key sequences
 sync-dotfiles.sh  the snapshot/restore tool
 ```
+
+Most mappings live under `$HOME`, but a few track system files under
+`/etc` (e.g. `geoclue/geoclue.conf`). For those, `snapshot` reads them
+directly and `restore` writes them with `sudo` — so `restore` may prompt
+for your password when a system mapping is selected.
 
 ## Snapshot / restore
 

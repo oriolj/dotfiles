@@ -6,7 +6,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES="$SCRIPT_DIR/dotfiles"
 
-# "<absolute source under $HOME>|<relative destination under dotfiles/>"
+# "<absolute source path>|<relative destination under dotfiles/>"
+# Sources are usually under $HOME, but absolute system paths (e.g.
+# /etc/...) are also supported: snapshot reads them directly; restore
+# writes them with sudo (see needs_root below).
 # Group names in the picker are derived from the first segment of the
 # destination path (e.g. "hypr/scripts" → group "hypr").
 declare -a MAPPINGS=(
@@ -46,6 +49,7 @@ declare -a MAPPINGS=(
     "$HOME/.XCompose|XCompose"
     "$HOME/.tmux.conf|tmux/tmux.conf"
     "$HOME/.tmux|tmux/tmux"
+    "/etc/geoclue/geoclue.conf|geoclue/geoclue.conf"
 )
 
 usage() {
@@ -134,13 +138,22 @@ summarize_rsync() {
     '
 }
 
+# Returns 0 if writing to $1 needs root — i.e. it's a system path outside
+# $HOME (e.g. /etc/...). Restore writes such destinations with sudo.
+needs_root() {
+    local p="$1"
+    [[ "$p" == "$HOME" || "$p" == "$HOME"/* ]] && return 1
+    return 0
+}
+
 # rsync's --dry-run with a missing destination parent errors with code 3
 # instead of treating files as "new" — and rsync 3.4.1's --mkpath doesn't
 # rescue dry-run. So pre-create the destination's containing dir ourselves.
+# Optional extra args (e.g. "sudo") are prefixed to the mkdir.
 ensure_dest_parent() {
-    local to="$1" parent
+    local to="$1"; shift; local pre=("$@") parent
     if [[ "$to" == */ ]]; then parent="${to%/}"; else parent="$(dirname "$to")"; fi
-    [[ -d "$parent" ]] || mkdir -p "$parent"
+    [[ -d "$parent" ]] || "${pre[@]}" mkdir -p "$parent"
 }
 
 # Sets globals STATUS ("missing"|"unchanged"|"changes") and CHANGES
@@ -162,10 +175,11 @@ probe_mapping() {
 
 apply_mapping() {
     local from="$1" to="$2"
-    local args=(-a --mkpath) src="$from" dst="$to"
+    local args=(-a --mkpath) src="$from" dst="$to" pre=()
     if [[ -d "$from" ]]; then args+=(--delete); src="$from/"; dst="$to/"; fi
-    ensure_dest_parent "$dst"
-    rsync "${args[@]}" "$src" "$dst"
+    needs_root "$to" && pre=(sudo)
+    ensure_dest_parent "$dst" "${pre[@]}"
+    "${pre[@]}" rsync "${args[@]}" "$src" "$dst"
 }
 
 # Comment out the listener block that runs `systemctl suspend` in
