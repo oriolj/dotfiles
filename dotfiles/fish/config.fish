@@ -65,11 +65,20 @@ end
 # Remote sessions tint the terminal background so it's obvious at a glance
 # that input isn't going to the local box. OSC 11 sets the background; OSC 111
 # resets it to the configured default when the session ends.
-#   minisforum (home server) → dark teal #0f2228
-#   any other host           → dark maroon #2a1212
+#   minisforum (home server) → dark teal   #0f2228
+#   x13gen3 (laptop)         → dark indigo #15182e
+#   any other host (ssh)     → dark maroon #2a1212
 function m
     printf '\e]11;#0f2228\e\\'
     mosh minisforum-um880
+    printf '\e]111\e\\'
+end
+
+# x13 laptop over mosh (mosh-server is present). Has its own tint because
+# mosh bypasses the ssh wrapper below.
+function x
+    printf '\e]11;#15182e\e\\'
+    mosh x13gen3
     printf '\e]111\e\\'
 end
 
@@ -83,6 +92,12 @@ function ssh
         command ssh $argv
     end
     printf '\e]111\e\\'
+end
+
+# Mac mini over ssh (macOS has no mosh-server). Inherits the maroon tint
+# and kitten terminfo routing from the ssh wrapper above.
+function mac
+    ssh oriols-mac-mini
 end
 
 # pnpm
