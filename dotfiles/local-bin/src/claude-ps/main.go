@@ -61,6 +61,17 @@ func (s state) emoji() string {
 	}
 }
 
+func (s state) String() string {
+	switch s {
+	case stateWorking:
+		return "working"
+	case stateWaiting:
+		return "waiting"
+	default:
+		return "unknown"
+	}
+}
+
 type session struct {
 	PID     int    `json:"pid"`
 	Cwd     string `json:"cwd"`
@@ -77,7 +88,7 @@ func main() {
 	case hasFlag("--watch"):
 		watch()
 	case hasFlag("--count"):
-		fmt.Println(len(collect()))
+		fmt.Println(len(claudePIDs())) // bare count: no tmux/proc classification needed
 	case hasFlag("--tmux"):
 		emitTmux(collect())
 	case hasFlag("--json"):
@@ -138,7 +149,7 @@ func collect() []session {
 			Cwd:     cwd,
 			Project: shortLabel(cwd),
 			Name:    name,
-			State:   map[state]string{stateWorking: "working", stateWaiting: "waiting", stateUnknown: "unknown"}[st],
+			State:   st.String(),
 			Age:     ageSeconds(pid, uptime),
 			st:      st,
 		})
@@ -230,11 +241,13 @@ func isPlainStart(r rune) bool {
 		(r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
 }
 
-// stripMarker drops a leading single-rune status marker (✳ or a braille
-// spinner) plus its following space, leaving the bare session name.
+// stripMarker drops a leading status marker (the "✳" idle glyph or a
+// braille working spinner) plus its following space, leaving the bare
+// session name. A marker is exactly the leading rune classify() keys on:
+// any non-plain start, so both functions share the isPlainStart predicate.
 func stripMarker(title string) string {
 	r := []rune(title)
-	if len(r) > 1 && r[1] == ' ' && (r[0] == '✳' || (r[0] >= 0x2800 && r[0] <= 0x28FF)) {
+	if len(r) > 1 && r[1] == ' ' && !isPlainStart(r[0]) {
 		return strings.TrimSpace(string(r[2:]))
 	}
 	return title
@@ -332,17 +345,23 @@ func fmtAge(seconds int) string {
 	}
 }
 
+// statusSummary renders the shared working/waiting (·unknown) breakdown.
+func statusSummary(working, waiting, unknown int) string {
+	s := fmt.Sprintf("🔄 %d working · ✅ %d waiting", working, waiting)
+	if unknown > 0 {
+		s += fmt.Sprintf(" · %d unknown", unknown)
+	}
+	return s
+}
+
 func emitHuman(sessions []session) {
 	working, waiting, unknown := tally(sessions)
 	word := "sessions"
 	if len(sessions) == 1 {
 		word = "session"
 	}
-	summary := fmt.Sprintf("🔄 %d working · ✅ %d waiting", working, waiting)
-	if unknown > 0 {
-		summary += fmt.Sprintf(" · %d unknown", unknown)
-	}
-	fmt.Printf("%d Claude Code %s running  —  %s\n", len(sessions), word, summary)
+	fmt.Printf("%d Claude Code %s running  —  %s\n",
+		len(sessions), word, statusSummary(working, waiting, unknown))
 	if len(sessions) == 0 {
 		return
 	}
@@ -393,11 +412,8 @@ func emitNoctalia(sessions []session) {
 	text := fmt.Sprintf("%d/%d", working, len(sessions))
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d Claude Code sessions\n🔄 %d working · ✅ %d waiting",
-		len(sessions), working, waiting)
-	if unknown > 0 {
-		fmt.Fprintf(&b, " · %d unknown", unknown)
-	}
+	fmt.Fprintf(&b, "%d Claude Code sessions\n%s",
+		len(sessions), statusSummary(working, waiting, unknown))
 	for _, s := range sessions {
 		fmt.Fprintf(&b, "\n%s %s — %s (%s)", s.st.emoji(), s.Name, s.Project, fmtAge(s.Age))
 	}
