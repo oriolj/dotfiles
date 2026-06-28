@@ -4,17 +4,22 @@ Noctalia CustomButton (parseJson: true) widget.
 
 Bar text:  "{claude_pct}% {codex_pct}% {claude_reset}"  — only Claude's
            5h reset time is shown, since both tools have similar windows
-           and the bar has limited width. A tool needing login shows 🔑.
+           and the bar has limited width.
 Tooltip:   Claude tooltip, blank line, Codex tooltip — full detail.
-textColor: based on the higher of the two 5h percentages (error if either
-           needs login).
+textColor: based on the higher of the two 5h percentages (error if a
+           tool needs login).
 
-Both `claude-usage` and `codex-usage` call `xdg-open` to pop the login
-page (claude.ai / chatgpt.com) on a 401/403. From a status-bar widget
-that polls continuously that means the browser keeps hijacking the
-screen. We don't want that: a no-op `xdg-open` shim is prepended to PATH
-so the launch becomes a silent exit, and we surface 🔑 on the bar
-instead.
+Both tools are passive cookie readers: they read the claude.ai / chatgpt.com
+session cookie out of the browser's cookie DB and call the usage API. A
+401/403 ("Auth Err") means that cookie is stale. The only thing that
+refreshes it is the browser loading the site (rotating the cookie back into
+the DB), so on Auth Err we open the site in its browser to try to renew —
+but at most MAX_ATTEMPTS times, spaced COOLDOWN seconds apart. After that we
+stop opening (so we don't spawn a tab on every poll) and show 🔑 with the
+browser to open, until a successful read resets the counter.
+
+A no-op xdg-open shim is kept on PATH so the tools' own unbounded login-page
+launches never fire; the bounded opens below are the only intended ones.
 """
 from __future__ import annotations
 
@@ -23,12 +28,34 @@ import os
 import pathlib
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
+
+MAX_ATTEMPTS = 3
+COOLDOWN = 25  # seconds between renew attempts, so the cookie has time to refresh
+
+PROVIDERS = {
+    "claude": {
+        "title": "Claude Code",
+        "browser": "chromium",
+        "label": "Chromium",
+        "url": "https://claude.ai",
+        "state": "/tmp/claude-usage-noctalia.claude.auth",
+    },
+    "codex": {
+        "title": "Codex",
+        "browser": "brave",
+        "label": "Brave",
+        "url": "https://chatgpt.com",
+        "state": "/tmp/claude-usage-noctalia.codex.auth",
+    },
+}
 
 
 def install_noop_xdg_open() -> None:
     """Shadow `xdg-open` with a no-op so the usage tools can't launch a
-    browser when auth has expired. Affects this process and its children."""
+    browser on their own; the bounded opens in this script are the only
+    intended launches. Affects this process and its children."""
     shim_dir = pathlib.Path("/tmp/claude-usage-noctalia-shim")
     shim = shim_dir / "xdg-open"
     if not shim.exists():
@@ -72,36 +99,69 @@ def is_auth_error(data: dict | None) -> bool:
     return is_error(data) and "Auth Err" in data.get("text", "")
 
 
-def bar_part(data: dict | None) -> str:
-    """Bar segment for one tool: percentage, 🔑 if login needed, ⚠ on
-    other errors, · if the tool itself didn't run."""
-    if data is None:
-        return "·"
-    if is_auth_error(data):
-        return "🔑"
-    if is_error(data):
-        return "⚠"
-    return f"{pct(data)}%"
+def read_state(path: str) -> tuple[int, float]:
+    """(attempt_count, last_attempt_epoch); (0, 0) if no state yet."""
+    try:
+        n, ts = pathlib.Path(path).read_text().split()
+        return int(n), float(ts)
+    except Exception:
+        return 0, 0.0
 
 
-def tooltip_part(label: str, data: dict | None) -> str:
+def write_state(path: str, n: int, ts: float) -> None:
+    pathlib.Path(path).write_text(f"{n} {ts}")
+
+
+def open_browser(browser: str, url: str) -> None:
+    try:
+        subprocess.Popen(
+            [browser, url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except FileNotFoundError:
+        pass
+
+
+def handle(name: str, data: dict | None, now: float) -> tuple[str, str, bool]:
+    """Return (bar_segment, tooltip_segment, needs_login). Performs the
+    bounded renew side-effects for auth errors."""
+    cfg = PROVIDERS[name]
+
     if data is None:
-        return f"{label}\n(unavailable)"
+        return "·", f"{cfg['title']}\n(unavailable)", False
+
     if is_auth_error(data):
-        return f"{label}\n🔑 login needed — sign in to the app/site, then click to refresh"
+        n, ts = read_state(cfg["state"])
+        if n >= MAX_ATTEMPTS:
+            tip = (f"{cfg['title']}\n🔑 login needed — open {cfg['label']} and "
+                   f"sign in at {cfg['url']}, then it refreshes automatically")
+            return "🔑", tip, True
+        if now - ts >= COOLDOWN:
+            n += 1
+            write_state(cfg["state"], n, now)
+            open_browser(cfg["browser"], cfg["url"])
+        tip = f"{cfg['title']}\n🔄 renewing login in {cfg['label']} ({n}/{MAX_ATTEMPTS})…"
+        return "🔄", tip, False
+
     if is_error(data):
-        return f"{label}\n{data.get('tooltip', '')}"
-    return f"{label}\n{data.get('tooltip', '')}"
+        return "⚠", f"{cfg['title']}\n{data.get('tooltip', '')}", False
+
+    # Success — clear any auth-failure state.
+    pathlib.Path(cfg["state"]).unlink(missing_ok=True)
+    return f"{pct(data)}%", f"{cfg['title']}\n{data.get('tooltip', '')}", False
 
 
 def main() -> int:
     install_noop_xdg_open()
+    now = time.time()
 
     # --format '{reset}' makes each tool's JSON `text` field just the reset
     # string (no pango), so we can read it directly without a regex strip.
     cmds = [
-        ["claude-usage", "--waybar", "--browser", "chromium", "--format", "{reset}"],
-        ["codex-usage", "--waybar", "--browser", "brave", "--format", "{reset}"],
+        ["claude-usage", "--waybar", "--browser", PROVIDERS["claude"]["browser"], "--format", "{reset}"],
+        ["codex-usage", "--waybar", "--browser", PROVIDERS["codex"]["browser"], "--format", "{reset}"],
     ]
     with ThreadPoolExecutor(max_workers=2) as ex:
         claude, codex = list(ex.map(fetch, cmds))
@@ -110,7 +170,10 @@ def main() -> int:
         print(json.dumps({"text": "", "tooltip": ""}))
         return 0
 
-    bits = [bar_part(claude), bar_part(codex)]
+    claude_bar, claude_tip, claude_login = handle("claude", claude, now)
+    codex_bar, codex_tip, codex_login = handle("codex", codex, now)
+
+    bits = [claude_bar, codex_bar]
     # Show Claude's 5h reset only when it actually fetched OK.
     if claude and not is_error(claude):
         claude_reset = claude.get("text", "")
@@ -118,12 +181,9 @@ def main() -> int:
             bits.append(claude_reset)
     text = " ".join(bits)
 
-    tooltip = "\n\n".join(
-        tooltip_part(label, data)
-        for label, data in (("Claude Code", claude), ("Codex", codex))
-    )
+    tooltip = f"{claude_tip}\n\n{codex_tip}"
 
-    if is_auth_error(claude) or is_auth_error(codex):
+    if claude_login or codex_login:
         text_color = "error"
     else:
         text_color = color_for(max(pct(claude), pct(codex)))
