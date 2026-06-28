@@ -448,6 +448,15 @@ window-rule {
     open-floating true
 }
 
+// claude-ps --watch: live monitor of running Claude Code sessions, opened
+// by clicking the Noctalia "claudeSessions" widget. Roomy for the table.
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty\.claude-ps$"#
+    open-floating true
+    default-column-width { fixed 1100; }
+    default-window-height { fixed 760; }
+}
+
 // Remote dev shells (kitty --class kitty-remote-dev). Teal active
 // border to flag a remote dev host. The terminal itself also paints a
 // teal-tinted bg.

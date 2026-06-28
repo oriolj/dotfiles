@@ -1,0 +1,2 @@
+# Built binary — install target writes to ~/.local/bin; `make build` writes here.
+/claude-ps
