@@ -4,16 +4,38 @@ Noctalia CustomButton (parseJson: true) widget.
 
 Bar text:  "{claude_pct}% {codex_pct}% {claude_reset}"  — only Claude's
            5h reset time is shown, since both tools have similar windows
-           and the bar has limited width.
+           and the bar has limited width. A tool needing login shows 🔑.
 Tooltip:   Claude tooltip, blank line, Codex tooltip — full detail.
-textColor: based on the higher of the two 5h percentages.
+textColor: based on the higher of the two 5h percentages (error if either
+           needs login).
+
+Both `claude-usage` and `codex-usage` call `xdg-open` to pop the login
+page (claude.ai / chatgpt.com) on a 401/403. From a status-bar widget
+that polls continuously that means the browser keeps hijacking the
+screen. We don't want that: a no-op `xdg-open` shim is prepended to PATH
+so the launch becomes a silent exit, and we surface 🔑 on the bar
+instead.
 """
 from __future__ import annotations
 
 import json
+import os
+import pathlib
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
+
+
+def install_noop_xdg_open() -> None:
+    """Shadow `xdg-open` with a no-op so the usage tools can't launch a
+    browser when auth has expired. Affects this process and its children."""
+    shim_dir = pathlib.Path("/tmp/claude-usage-noctalia-shim")
+    shim = shim_dir / "xdg-open"
+    if not shim.exists():
+        shim_dir.mkdir(parents=True, exist_ok=True)
+        shim.write_text("#!/bin/sh\nexit 0\n")
+        shim.chmod(0o755)
+    os.environ["PATH"] = f"{shim_dir}:{os.environ.get('PATH', '')}"
 
 
 def color_for(percentage: int) -> str:
@@ -42,12 +64,44 @@ def pct(data: dict | None) -> int:
     return int(data.get("percentage", 0)) if data else 0
 
 
+def is_error(data: dict | None) -> bool:
+    return bool(data) and data.get("class") == "critical"
+
+
+def is_auth_error(data: dict | None) -> bool:
+    return is_error(data) and "Auth Err" in data.get("text", "")
+
+
+def bar_part(data: dict | None) -> str:
+    """Bar segment for one tool: percentage, 🔑 if login needed, ⚠ on
+    other errors, · if the tool itself didn't run."""
+    if data is None:
+        return "·"
+    if is_auth_error(data):
+        return "🔑"
+    if is_error(data):
+        return "⚠"
+    return f"{pct(data)}%"
+
+
+def tooltip_part(label: str, data: dict | None) -> str:
+    if data is None:
+        return f"{label}\n(unavailable)"
+    if is_auth_error(data):
+        return f"{label}\n🔑 login needed — sign in to the app/site, then click to refresh"
+    if is_error(data):
+        return f"{label}\n{data.get('tooltip', '')}"
+    return f"{label}\n{data.get('tooltip', '')}"
+
+
 def main() -> int:
+    install_noop_xdg_open()
+
     # --format '{reset}' makes each tool's JSON `text` field just the reset
     # string (no pango), so we can read it directly without a regex strip.
     cmds = [
         ["claude-usage", "--waybar", "--browser", "chromium", "--format", "{reset}"],
-        ["codex-usage", "--waybar", "--browser", "chromium", "--format", "{reset}"],
+        ["codex-usage", "--waybar", "--browser", "brave", "--format", "{reset}"],
     ]
     with ThreadPoolExecutor(max_workers=2) as ex:
         claude, codex = list(ex.map(fetch, cmds))
@@ -56,25 +110,28 @@ def main() -> int:
         print(json.dumps({"text": "", "tooltip": ""}))
         return 0
 
-    claude_pct = pct(claude)
-    codex_pct = pct(codex)
-    claude_reset = claude.get("text", "") if claude else ""
-
-    bits = [f"{claude_pct}%", f"{codex_pct}%"]
-    if claude_reset:
-        bits.append(claude_reset)
+    bits = [bar_part(claude), bar_part(codex)]
+    # Show Claude's 5h reset only when it actually fetched OK.
+    if claude and not is_error(claude):
+        claude_reset = claude.get("text", "")
+        if claude_reset:
+            bits.append(claude_reset)
     text = " ".join(bits)
 
     tooltip = "\n\n".join(
-        f"{label}\n{data.get('tooltip', '')}"
+        tooltip_part(label, data)
         for label, data in (("Claude Code", claude), ("Codex", codex))
-        if data
     )
+
+    if is_auth_error(claude) or is_auth_error(codex):
+        text_color = "error"
+    else:
+        text_color = color_for(max(pct(claude), pct(codex)))
 
     print(json.dumps({
         "text": text,
         "tooltip": tooltip,
-        "textColor": color_for(max(claude_pct, codex_pct)),
+        "textColor": text_color,
     }))
     return 0
 
